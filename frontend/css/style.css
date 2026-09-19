@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+
 :root {
   --bg: #f7f2e7;
   --panel: rgba(255, 252, 244, .94);
@@ -6,7 +8,7 @@
   --muted: #6d756a;
   --herb: #38764d;
   --line: rgba(36, 48, 39, .12);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Nunito", "Segoe UI", sans-serif;
 }
 
 html, body {
@@ -44,11 +46,12 @@ html, body {
   gap: 16px;
 }
 
-.screen h1, h2, h3, button, input { font-family: Arial, Helvetica, sans-serif; }
+.screen h1, h2, h3 { font-family: "Fredoka", "Arial Rounded MT Bold", sans-serif; }
+button, input { font-family: "Nunito", "Segoe UI", sans-serif; }
 .screen h1 {
   font-size: clamp(2.4rem, 7vw, 4rem);
   line-height: .92;
-  letter-spacing: -.075em;
+  letter-spacing: -.035em;
   margin: 0;
   color: var(--text);
 }

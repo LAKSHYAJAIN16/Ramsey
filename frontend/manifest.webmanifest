@@ -1,0 +1,9 @@
+{
+  "name": "Ramsey — Learn to Cook",
+  "short_name": "Ramsey",
+  "start_url": "/app/",
+  "display": "standalone",
+  "background_color": "#f7f2e7",
+  "theme_color": "#38764d",
+  "description": "A cooking course and mixed-reality kitchen assistant."
+}

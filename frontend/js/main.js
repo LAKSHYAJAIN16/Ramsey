@@ -214,6 +214,7 @@ function setupVoice() {
 }
 
 function main() {
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.js").catch(() => {});
   setupLauncher();
   setupKitchenControls();
   setupVoice();
