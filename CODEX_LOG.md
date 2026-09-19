@@ -2,8 +2,23 @@
 
 One row per concrete contribution. Dates are used where precise times were not recorded. Time savings were not measured.
 
+## Demo example: fixing progression across desktop and Quest
+
+**Prompt:** “Work on the landing page + Duolingo functionality. Look at TODO.md, PLAN.md.”
+
+**Before:** Campaign unlocks read browser-local meal records, while Quest completion saved to the server profile. Completing a recipe in Quest did not supply the campaign's unlock data.
+
+**Codex contribution:** Traced both paths, recovered the removed plans from Git history, and implemented durable completed-dish records attached to the recipe selected on desktop. Added daily-goal state, stale-streak handling, next-rank targets, and regression tests.
+
+**Evidence:** [c6c0da9 — profile progression](https://github.com/LAKSHYAJAIN16/Ramsey/commit/c6c0da9), [profile tests](backend/tests/test_profiles.py). `python -m pytest backend/tests/test_profiles.py -q -p no:cacheprovider`: **4 passed**. Tests check persistence across store reload, duplicate-completion retry, and expired streak display using a fake Firestore client.
+
+**Boundary:** The backend change is committed and pushed. Desktop campaign wiring is in progress; no end-to-end Firebase/Quest success is claimed for this change yet. No measured time savings.
+
+## Contribution history
+
 | Time | Who | Task | Prompt (summary) | What Codex produced | What we changed | Minutes saved |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-09-19 | Laksh + Codex | Repair campaign progression | Connect Duolingo-style progress to real cooking | [c6c0da9](https://github.com/LAKSHYAJAIN16/Ramsey/commit/c6c0da9): persistent dish completions, daily goal and rank targets; four passing profile tests | Replaced the missing server-side unlock record; desktop consumption is still being wired | Not measured |
 | 2026-09-19 | Developer + Codex | Automatic equipment localization | Locate objects using CV without pointing | [Detection contract](backend/chef/spatial.py), capture-time depth samples and world-space labels | Text-only scene recognition now has a measured-location path; uncertain depth withholds labels; moving-object identity remains unfinished | Not measured |
 | 2026-09-19 | Developer + Codex | Spatial verification | Validate implementation before calling it working | 89 backend tests; seven Editor spatial/portrait checks; spatial permission setup | Added malformed-box tests, depth-edge rejection and duplicate-observation guard. No live CV/device success claimed | Not measured |
 | 2026-09-19 | Developer + Codex | Product direction and public documentation | Explore soft pivots, use Flaivor as baseline, omit private details | [Product direction](docs/product-direction.md) and [spatial guide](docs/spatial-localization.md) | Explicit acceptance gaps and four related directions; machine paths removed from current docs | Not measured |

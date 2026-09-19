@@ -17,6 +17,16 @@ Without keys or a headset, inspect the source and run the offline test suite. Th
 
 ## Evidence matrix
 
+## OpenAI prize demonstration
+
+The supplied judging criteria assess both the OpenAI API-powered experience and meaningful use of Codex. Demonstrate these separately:
+
+1. Show a working interaction and identify the actual provider/model route. The current voice configuration requests OpenAI `tts-1` through Backboard; that configuration alone is not proof of a successful API call. Image analysis currently uses the Backboard adapter. Do not claim a direct OpenAI vision integration or confirmed prize eligibility without verifying it.
+2. Show [the Codex progression example](../CODEX_LOG.md#demo-example-fixing-progression-across-desktop-and-quest): before, implementation commit, and regression tests. Explain how tracing the desktop/Quest state mismatch improved the product.
+3. Distinguish live demonstration from fixture tests. Record a successful provider rehearsal before presenting the integration as live.
+
+## Verification boundaries
+
 | Claim | Evidence | Boundary |
 | --- | --- | --- |
 | Backend logic | 78 local tests passed on September 19, 2026 | Fake external providers |
