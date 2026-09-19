@@ -41,8 +41,8 @@ export class VoiceRecorder {
   }
 
   playReply(result) {
-    if (!result.audio_base64) return; // no TTS audio (e.g. Backboard not wired yet)
-    const audio = new Audio(`data:audio/mp3;base64,${result.audio_base64}`);
+    if (!result.audio_url) return; // no TTS audio (e.g. Backboard not wired yet)
+    const audio = new Audio(result.audio_url); // Backboard returns a temporary audio URL, not inline audio
     this.currentAudio = audio;
     this.onSpeakingChange(true);
     audio.addEventListener("ended", () => this.onSpeakingChange(false));

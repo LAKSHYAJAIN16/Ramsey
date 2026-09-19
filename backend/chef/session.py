@@ -38,6 +38,9 @@ class KitchenSession:
         self.recipe = recipe
         self.step_index = 0
         self.servings_multiplier = Fraction(1)
+        # Backboard tracks conversation state server-side per thread; we just
+        # need to remember which thread belongs to this cook's session.
+        self.backboard_thread_id: Optional[str] = None
         self.checked_ingredients: set[int] = set()
         self.timers: List[Timer] = []
 

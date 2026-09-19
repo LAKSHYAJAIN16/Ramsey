@@ -1,15 +1,40 @@
-"""Thin wrapper over Backboard: chat completion with tool calls, plus
-optional server-side speech-to-text / text-to-speech so the headset never
-depends on browser Web Speech support.
+"""Real Backboard client.
 
-UNVERIFIED (Tier 0 item): confirm the request/response shape against a
-live Backboard key and that your model names exist in the catalog.
+Verified against https://docs.backboard.io (Sept 2026):
+  - base URL:      https://app.backboard.io/api
+  - auth header:   X-API-Key
+  - send message:  POST /threads/messages           (or /threads/{id}/messages)
+  - tool outputs:  POST /threads/tool-outputs
+  - voice:         same send-message call, multipart/form-data, with an
+                    `audio_file` binary and a `voice` field (JSON-encoded
+                    {"stt": {...}, "tts": {...}})
+
+Backboard is an Assistants-style thread/run API, not a stateless chat
+completion: it remembers the conversation server-side against a
+`thread_id`, and when the model wants to call a tool it returns
+status="REQUIRES_ACTION" with `tool_calls` instead of text - you execute
+them locally and POST the results to /threads/tool-outputs to get the
+next turn. That flow (not a client-side messages list) is what
+`chef/brain.py`'s loop is built around.
+
+Still unverified: exact behavior once a real key is live (Tier 0). The
+response field spelling (camelCase vs snake_case) has been inconsistent
+across the docs mirrors this was checked against - `_get` below reads
+both spellings defensively.
 """
+import json
 from typing import Any, Dict, List, Optional
 
 import httpx
 
-BACKBOARD_API_URL = "https://api.backboard.io/v1/chat"
+BASE_URL = "https://app.backboard.io/api"
+
+
+def _get(data: Dict[str, Any], *keys: str, default=None):
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
+    return default
 
 
 class BackboardClient:
@@ -17,41 +42,72 @@ class BackboardClient:
         self.api_key = api_key
         self.model = model
 
+    def _headers(self) -> Dict[str, str]:
+        return {"X-API-Key": self.api_key}
+
     async def send_message(
         self,
-        messages: List[Dict[str, str]],
+        content: str,
+        thread_id: Optional[str] = None,
+        system_prompt: Optional[str] = None,
         tools: Optional[List[Dict[str, Any]]] = None,
-        voice: Optional[Dict[str, str]] = None,
+        voice: Optional[Dict[str, Any]] = None,
         audio_input: Optional[bytes] = None,
     ) -> Dict[str, Any]:
-        """One round-trip to Backboard.
-
-        `voice={"stt": "...", "tts": "..."}` asks Backboard to transcribe
-        `audio_input` before the model call and synthesize the reply
-        after, per the brief. Returns:
-            {"text": str, "tool_calls": [{"name", "arguments"}], "audio": bytes | None}
+        """One turn of the conversation. Pass the `thread_id` from a prior
+        response to continue it; omit it to start a new thread.
         """
-        payload: Dict[str, Any] = {
-            "model": self.model,
-            "messages": messages,
+        fields: Dict[str, Any] = {
+            "content": content,
+            "model_name": self.model,
+            "memory": "Auto",
         }
+        if thread_id:
+            fields["thread_id"] = thread_id
+        if system_prompt:
+            fields["system_prompt"] = system_prompt
         if tools:
-            payload["tools"] = tools
+            fields["tools"] = tools if audio_input is None else json.dumps(tools)
         if voice:
-            payload["voice"] = voice
-        if audio_input is not None:
-            payload["audio_input"] = audio_input
+            fields["voice"] = voice if audio_input is None else json.dumps(voice)
 
         async with httpx.AsyncClient(timeout=30) as client:
+            if audio_input is not None:
+                # multipart/form-data is required to attach a binary audio file
+                resp = await client.post(
+                    f"{BASE_URL}/threads/messages",
+                    headers=self._headers(),
+                    data=fields,
+                    files={"audio_file": ("utterance.webm", audio_input, "audio/webm")},
+                )
+            else:
+                resp = await client.post(
+                    f"{BASE_URL}/threads/messages",
+                    headers=self._headers(),
+                    json=fields,
+                )
+        resp.raise_for_status()
+        return self._normalize(resp.json())
+
+    async def submit_tool_outputs(self, thread_id: str, tool_outputs: List[Dict[str, str]]) -> Dict[str, Any]:
+        """`tool_outputs`: [{"tool_call_id": ..., "output": <stringified result>}]."""
+        async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
-                BACKBOARD_API_URL,
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json=payload,
+                f"{BASE_URL}/threads/tool-outputs",
+                headers=self._headers(),
+                json={"thread_id": thread_id, "tool_outputs": tool_outputs},
             )
         resp.raise_for_status()
-        data = resp.json()
+        return self._normalize(resp.json())
+
+    @staticmethod
+    def _normalize(data: Dict[str, Any]) -> Dict[str, Any]:
+        voice_records = _get(data, "voice_records", "voiceRecords", default={}) or {}
+        tts = voice_records.get("tts") if isinstance(voice_records, dict) else None
         return {
-            "text": data.get("text", ""),
-            "tool_calls": data.get("tool_calls", []),
-            "audio": data.get("audio"),
+            "thread_id": _get(data, "thread_id", "threadId"),
+            "status": _get(data, "status", default="COMPLETED"),
+            "content": _get(data, "content", "message", default=""),
+            "tool_calls": _get(data, "tool_calls", "toolCalls", default=[]) or [],
+            "audio_url": tts.get("audio_url") if isinstance(tts, dict) else None,
         }

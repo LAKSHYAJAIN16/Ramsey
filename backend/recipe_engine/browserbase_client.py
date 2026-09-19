@@ -1,13 +1,38 @@
-"""Thin adapters over Browserbase + Stagehand.
+"""Real adapters over Browserbase Fetch and Stagehand.
 
-These are the two integration points flagged as "known unknowns" in the
-project brief (fetch(format="raw") returning real HTML, Stagehand.create
-working off just the Browserbase key). Nothing here has been run against
-the live API yet — verify against a real key before the demo (Tier 0).
+Browserbase Fetch — verified against docs.browserbase.com/platform/fetch
+(Sept 2026):
+    POST https://api.browserbase.com/v1/fetch
+    header: X-BB-API-Key
+    body:   {"url": ..., "format": "raw" | "markdown" | "json", ...}
+    "raw" is the default and returns the unmodified upstream response
+    body in the `content` field - this resolves the brief's "known
+    unknown" #1: yes, fetch(format="raw") returns real page HTML.
 
-Everything is written against a small interface (`search`, `fetch_raw`,
-`browser_extract`) so `race.py` and the tests can swap in fakes without
-caring whether the real SDK call shape below turns out to be right.
+Browserbase doesn't expose a dedicated web-search endpoint, so `search`
+below asks a JS-free search engine for results *through Browserbase
+Fetch* (not a raw httpx call) and pulls out result links - it still runs
+everything through Browserbase, it just treats the search results page
+as another URL to fetch.
+
+Stagehand — verified against docs.stagehand.dev/v3/sdk/python and the
+stagehand PyPI quickstart (Sept 2026):
+    pip install stagehand
+    from stagehand import AsyncStagehand
+    client = AsyncStagehand(browserbase_api_key=...)      # Model Gateway:
+                                                           # no separate
+                                                           # model provider
+                                                           # key needed
+    session = await client.sessions.start(model_name="...")
+    await session.navigate(url=...)
+    await session.act(input="...")
+    await session.extract(instruction="...", schema={...})
+    await session.end()
+This resolves "known unknown" #2 (Stagehand works off just the
+Browserbase key via Model Gateway). Still unverified live: whether
+`.sessions.start` or `.sessions.create` is the current method name -
+docs mirrors disagreed on this, so it's worth a quick smoke test before
+the demo (Tier 0).
 """
 from __future__ import annotations
 
@@ -19,38 +44,34 @@ import httpx
 from backend.models import Recipe
 from backend.recipe_engine.parser import parse_recipe_from_html
 
+BROWSERBASE_FETCH_URL = "https://api.browserbase.com/v1/fetch"
 SEARCH_ENGINE_URL = "https://html.duckduckgo.com/html/?q={query}"
 
 
 class BrowserbaseClient:
-    """Real implementation. Construct with an API key + project id.
-
-    NOTE: `fetch_raw` and `browser_extract` call out to the Browserbase /
-    Stagehand SDKs lazily (imported inside the method) so this module can
-    be imported, and unit-tested via the fakes, without those packages
-    installed.
-    """
-
     def __init__(self, api_key: str, project_id: str):
         self.api_key = api_key
         self.project_id = project_id
 
-    async def search(self, dish_name: str, limit: int = 3) -> List[str]:
-        """Return candidate recipe page URLs for a dish.
-
-        Browserbase itself doesn't publish a dedicated "search" endpoint
-        in the version this was written against, so this asks a
-        JS-free search engine for results via a plain HTTP GET (cheap,
-        no browser session needed) and pulls out result links. Swap this
-        for a real Browserbase Search primitive if/when confirmed.
-        """
-        query = quote_plus(f"{dish_name} recipe")
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(SEARCH_ENGINE_URL.format(query=query), headers={
-                "User-Agent": "Mozilla/5.0 (Ramsey recipe search)",
-            })
+    async def fetch_raw(self, url: str, format: str = "raw") -> str:
+        """POST /v1/fetch. Returns the `content` field (page HTML for
+        format="raw")."""
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.post(
+                BROWSERBASE_FETCH_URL,
+                headers={"X-BB-API-Key": self.api_key, "Content-Type": "application/json"},
+                json={"url": url, "format": format},
+            )
         resp.raise_for_status()
-        return self._extract_result_links(resp.text, limit)
+        data = resp.json()
+        return data.get("content", "")
+
+    async def search(self, dish_name: str, limit: int = 3) -> List[str]:
+        """Candidate recipe page URLs for a dish, fetched through
+        Browserbase (not a direct httpx call to the search engine)."""
+        query = quote_plus(f"{dish_name} recipe")
+        html = await self.fetch_raw(SEARCH_ENGINE_URL.format(query=query))
+        return self._extract_result_links(html, limit)
 
     @staticmethod
     def _extract_result_links(html: str, limit: int) -> List[str]:
@@ -66,33 +87,29 @@ class BrowserbaseClient:
                 break
         return links
 
-    async def fetch_raw(self, url: str) -> str:
-        """Fetch a page's raw HTML through Browserbase's Fetch API.
-
-        UNVERIFIED (Tier 0 item): confirm `format="raw"` actually returns
-        rendered/static HTML for real recipe sites once a key is live.
-        """
-        from browserbase import Browserbase  # type: ignore
-
-        bb = Browserbase(api_key=self.api_key)
-        return await bb.fetch(url, project_id=self.project_id, format="raw")
-
     async def browser_extract(self, url: str) -> Optional[Recipe]:
-        """Slow path: open a real cloud browser, close popups, read the DOM.
+        """Slow path: open a real cloud browser, close popups, read the DOM."""
+        from stagehand import AsyncStagehand  # type: ignore
 
-        UNVERIFIED (Tier 0 item): confirm Stagehand.create works with only
-        the Browserbase key (Model Gateway), and that this live-view
-        session shows up in the launcher's iframe.
-        """
-        from stagehand import Stagehand  # type: ignore
-
-        stagehand = await Stagehand.create(browserbase_api_key=self.api_key)
+        client = AsyncStagehand(browserbase_api_key=self.api_key)
+        session = await client.sessions.start(model_name="anthropic/claude-sonnet-4-6")
         try:
-            page = await stagehand.page.goto(url)
-            await stagehand.page.act("close any popup, cookie banner, or newsletter modal")
-            data = await stagehand.page.extract(
-                "the recipe title, servings, ingredient list, and numbered steps"
+            await session.navigate(url=url)
+            await session.act(input="close any popup, cookie banner, or newsletter modal")
+            extraction = await session.extract(
+                instruction="the recipe title, servings, ingredient list, and numbered steps",
+                schema={
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "servings": {"type": "integer"},
+                        "ingredients": {"type": "array", "items": {"type": "string"}},
+                        "steps": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "required": ["ingredients", "steps"],
+                },
             )
+            data = extraction.data if hasattr(extraction, "data") else extraction
             ingredients = data.get("ingredients", [])
             steps = data.get("steps", [])
             if len(ingredients) < 3 or len(steps) < 2:
@@ -106,7 +123,7 @@ class BrowserbaseClient:
                 method="browser",
             )
         finally:
-            await stagehand.close()
+            await session.end()
 
 
 async def fetch_and_parse_fast(client: "BrowserbaseClient | object", url: str) -> Optional[Recipe]:

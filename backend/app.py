@@ -1,4 +1,3 @@
-import base64
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -116,18 +115,25 @@ async def api_chat_voice(session_id: str = Form(...), audio: UploadFile = File(.
     memory = _memory_store.get(session_id)
     audio_bytes = await audio.read()
 
+    # Provider/model choice here is a guess (docs.backboard.io/sdk/voice
+    # shows the {"stt": {...}, "tts": {...}} shape but not a default
+    # provider) - swap in a real one once a key is live (Tier 0).
     result = await handle_message(
         _backboard,
         session,
         memory,
         user_text="",
         audio_input=audio_bytes,
-        voice={"stt": "default", "tts": "default"},
+        voice={"stt": {"provider": "elevenlabs"}, "tts": {"provider": "elevenlabs"}},
     )
     _memory_store.save()
 
-    audio_b64 = base64.b64encode(result["audio"]).decode() if result.get("audio") else None
-    return {"reply": result["text"], "tool_calls": result["tool_calls"], "audio_base64": audio_b64, "state": result["state"]}
+    return {
+        "reply": result["text"],
+        "tool_calls": result["tool_calls"],
+        "audio_url": result["audio_url"],
+        "state": result["state"],
+    }
 
 
 _frontend_dir = Path(__file__).resolve().parent.parent / "frontend"

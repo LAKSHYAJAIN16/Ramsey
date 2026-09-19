@@ -1,86 +1,65 @@
 """Tool definitions the chef can call, and the dispatcher that executes
 them against a KitchenSession + CookMemory.
 
-Schema shape follows the common OpenAI-style function-calling format,
-since that's what most model gateways (Backboard included, presumably)
-accept. Confirm the exact shape Backboard wants during Tier 0/3.
+Schema shape is Backboard's confirmed format (docs.backboard.io/sdk/tool-calls):
+a list of {"type": "function", "function": {name, description, parameters}},
+same wrapper OpenAI uses.
 """
 from typing import Any, Dict
 
 from backend.chef.memory import CookMemory
 from backend.chef.session import KitchenSession
 
+
+def _tool(name: str, description: str, properties: Dict[str, Any] = None, required=None) -> Dict[str, Any]:
+    return {
+        "type": "function",
+        "function": {
+            "name": name,
+            "description": description,
+            "parameters": {
+                "type": "object",
+                "properties": properties or {},
+                **({"required": required} if required else {}),
+            },
+        },
+    }
+
+
 TOOL_SCHEMAS = [
-    {
-        "name": "next_step",
-        "description": "Advance to the next step of the recipe.",
-        "parameters": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "back_step",
-        "description": "Go back to the previous step of the recipe.",
-        "parameters": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "repeat_step",
-        "description": "Repeat the current step out loud.",
-        "parameters": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "start_timer",
-        "description": "Start a timer, auto-detecting duration from the current step if not given.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "label": {"type": "string"},
-                "duration_seconds": {"type": "integer"},
-            },
-        },
-    },
-    {
-        "name": "read_ingredients",
-        "description": "Read out the full (scaled) ingredient list.",
-        "parameters": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "scale_servings",
-        "description": "Scale the recipe to a serving multiplier, e.g. 2 for 'double it'.",
-        "parameters": {
-            "type": "object",
-            "properties": {"multiplier": {"type": "number"}},
-            "required": ["multiplier"],
-        },
-    },
-    {
-        "name": "swap_ingredient",
-        "description": "Swap one ingredient for another substitute.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "original": {"type": "string"},
-                "replacement": {"type": "string"},
-            },
-            "required": ["original", "replacement"],
-        },
-    },
-    {
-        "name": "remember_allergy",
-        "description": "Remember that the cook is allergic to something, across sessions.",
-        "parameters": {
-            "type": "object",
-            "properties": {"item": {"type": "string"}},
-            "required": ["item"],
-        },
-    },
-    {
-        "name": "remember_dislike",
-        "description": "Remember that the cook dislikes something, across sessions.",
-        "parameters": {
-            "type": "object",
-            "properties": {"item": {"type": "string"}},
-            "required": ["item"],
-        },
-    },
+    _tool("next_step", "Advance to the next step of the recipe."),
+    _tool("back_step", "Go back to the previous step of the recipe."),
+    _tool("repeat_step", "Repeat the current step out loud."),
+    _tool(
+        "start_timer",
+        "Start a timer, auto-detecting duration from the current step if not given.",
+        {"label": {"type": "string"}, "duration_seconds": {"type": "integer"}},
+    ),
+    _tool("read_ingredients", "Read out the full (scaled) ingredient list."),
+    _tool(
+        "scale_servings",
+        "Scale the recipe to a serving multiplier, e.g. 2 for 'double it'.",
+        {"multiplier": {"type": "number"}},
+        required=["multiplier"],
+    ),
+    _tool(
+        "swap_ingredient",
+        "Swap one ingredient for another substitute.",
+        {"original": {"type": "string"}, "replacement": {"type": "string"}},
+        required=["original", "replacement"],
+    ),
+    _tool(
+        "remember_allergy",
+        "Remember that the cook is allergic to something, across sessions.",
+        {"item": {"type": "string"}},
+        required=["item"],
+    ),
+    _tool(
+        "remember_dislike",
+        "Remember that the cook dislikes something, across sessions.",
+        {"item": {"type": "string"}},
+        required=["item"],
+    ),
 ]
 
 

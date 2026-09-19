@@ -7,3 +7,8 @@ pydantic>=2.7
 python-dotenv>=1.0
 pytest>=8.2
 pytest-asyncio>=0.23
+
+# Only needed for the live browser-fallback path (backend/recipe_engine/
+# browserbase_client.py:browser_extract) - not imported by the test suite,
+# which runs entirely against fakes.
+stagehand>=0.1
