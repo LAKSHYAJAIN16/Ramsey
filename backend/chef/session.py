@@ -31,6 +31,23 @@ class Timer:
         return self.remaining_seconds <= 0
 
 
+CORRECTION_COOLDOWN_SECONDS = 30
+
+
+@dataclass
+class PendingCorrection:
+    """A flagged mistake at one cooking vessel, waiting to see if the next
+    check confirms it's fixed. See CV.md's WATCHING/CORRECTING loop.
+    """
+
+    issue: str
+    flagged_at: float = field(default_factory=time.time)
+
+    @property
+    def cooldown_elapsed(self) -> bool:
+        return time.time() - self.flagged_at >= CORRECTION_COOLDOWN_SECONDS
+
+
 class KitchenSession:
     """One cook's in-progress recipe: current step, servings, timers."""
 
@@ -43,6 +60,20 @@ class KitchenSession:
         self.backboard_thread_id: Optional[str] = None
         self.checked_ingredients: set[int] = set()
         self.timers: List[Timer] = []
+        # Keyed per vessel (e.g. "pan, right burner"), not one global flag -
+        # two independent mistakes at two different pans (multi-cooking)
+        # get tracked and corrected independently. See CV.md.
+        self.pending_corrections: Dict[str, PendingCorrection] = {}
+
+    # --- CV correction loop -----------------------------------------------
+    def flag_correction(self, vessel: str, issue: str) -> None:
+        self.pending_corrections[vessel] = PendingCorrection(issue=issue)
+
+    def resolve_correction(self, vessel: str) -> None:
+        self.pending_corrections.pop(vessel, None)
+
+    def pending_correction_for(self, vessel: str) -> Optional[PendingCorrection]:
+        return self.pending_corrections.get(vessel)
 
     # --- navigation -----------------------------------------------------
     def next_step(self) -> str:
@@ -110,6 +141,7 @@ class KitchenSession:
             "timers": [
                 {"label": t.label, "remaining_seconds": t.remaining_seconds} for t in self.active_timers()
             ],
+            "pending_corrections": {vessel: pc.issue for vessel, pc in self.pending_corrections.items()},
         }
 
 

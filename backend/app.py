@@ -1,8 +1,10 @@
+import asyncio
+import base64
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import jwt
-from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
@@ -12,17 +14,20 @@ from pydantic import BaseModel
 from backend import config
 from backend.chef.backboard_client import BackboardClient
 from backend.chef.brain import handle_message
+from backend.chef.cooking_monitor import monitor_cooking
 from backend.chef.fridge import suggest_dishes_from_photo
 from backend.chef.kitchen_spots import KitchenSpotStore
 from backend.chef.memory import MemoryStore
 from backend.chef.session import KitchenSession
-from backend.chef.vision import check_doneness, identify_spot
+from backend.chef.vision import check_cooking, check_hazard, check_kitchen_setup, identify_spot
 from backend.firebase_auth import verify_firebase_id_token
 from backend.models import (
     ChatMessage,
     ChatReply,
-    DonenessCheck,
+    CookingCheck,
     FridgeSuggestions,
+    HazardCheck,
+    KitchenSetup,
     ProgressUpdate,
     Recipe,
     SafetyCommand,
@@ -254,15 +259,85 @@ async def api_identify_spot(photo: UploadFile = File(...)):
     return await identify_spot(_backboard, image_bytes, photo.filename or "spot.jpg")
 
 
-@app.post("/api/vision/check-doneness", response_model=DonenessCheck)
-async def api_check_doneness(session_id: str = Form(...), photo: UploadFile = File(...)):
-    """Unity headset camera photo of the dish mid-cook -> whether it looks
-    right for the current recipe step, with brief spoken-aloud-able feedback.
+@app.post("/api/vision/check-cooking", response_model=CookingCheck)
+async def api_check_cooking(session_id: str = Form(...), photo: UploadFile = File(...)):
+    """One-shot vision check: every cooking vessel in frame, contents,
+    doneness, and whether each matches the current step. No state-machine
+    side effects (no correction tracking, no memory writes) - for a manual
+    "check now" trigger or the phone-fallback path. WS /ws/vision/{id}
+    is the stateful version Unity actually streams to during a cook.
     """
     session = _get_or_create_session(session_id)
     image_bytes = await photo.read()
     state = session.to_state_dict()
-    return await check_doneness(_backboard, image_bytes, photo.filename or "dish.jpg", state["title"], state["current_step"])
+    return await check_cooking(_backboard, image_bytes, photo.filename or "dish.jpg", state["title"], state["current_step"])
+
+
+@app.post("/api/vision/check-hazard", response_model=HazardCheck)
+async def api_check_hazard(photo: UploadFile = File(...)):
+    """Smoke/fire/boil-over check. Informational only - never triggers an
+    automatic emergency call. A "high" severity result should surface the
+    same manual-confirmation Code Red dialog the voice-triggered phrase
+    already does (see _safety_response below).
+    """
+    image_bytes = await photo.read()
+    return await check_hazard(_backboard, image_bytes, photo.filename or "hazard.jpg")
+
+
+@app.post("/api/vision/scan-kitchen", response_model=KitchenSetup)
+async def api_scan_kitchen(session_id: str = Form(...), photo: UploadFile = File(...)):
+    """Wide shot of the kitchen before cooking starts -> what equipment/
+    ingredients are visibly ready, and what the recipe needs that isn't.
+    Meant to run once at session start, not per-step.
+    """
+    session = _get_or_create_session(session_id)
+    image_bytes = await photo.read()
+    return await check_kitchen_setup(_backboard, image_bytes, photo.filename or "kitchen.jpg", session.recipe.title, session.recipe.ingredients)
+
+
+@app.websocket("/ws/vision/{session_id}")
+async def ws_vision_monitor(websocket: WebSocket, session_id: str):
+    """The streaming/stateful path: Unity holds this open during an active
+    cook and sends a frame whenever it wants a check; results push back as
+    they finish. Two concurrent loops, not one sequential one: receiving
+    always keeps only the LATEST frame (overwriting anything unprocessed),
+    while a separate loop analyzes whatever's freshest whenever it's free -
+    so a burst of frames while one analysis is in flight gets collapsed
+    down to the newest one, never queued and processed late. See CV.md.
+    """
+    await websocket.accept()
+    session = _get_or_create_session(session_id)
+    memory = _memory_store.get(session_id)
+    latest: Dict[str, Any] = {}
+    frame_available = asyncio.Event()
+
+    async def receive_loop():
+        while True:
+            latest["payload"] = await websocket.receive_json()
+            frame_available.set()
+
+    async def process_loop():
+        while True:
+            await frame_available.wait()
+            frame_available.clear()
+            payload = latest.get("payload") or {}
+            image_bytes = base64.b64decode(payload.get("image_b64", "")) if payload.get("image_b64") else b""
+            if not image_bytes:
+                await websocket.send_json({"error": "no image"})
+                continue
+            result = await monitor_cooking(_backboard, session, memory, image_bytes, payload.get("filename", "frame.jpg"))
+            _memory_store.save()
+            await websocket.send_json(result)
+
+    receiver = asyncio.ensure_future(receive_loop())
+    processor = asyncio.ensure_future(process_loop())
+    try:
+        await asyncio.wait([receiver, processor], return_when=asyncio.FIRST_COMPLETED)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        receiver.cancel()
+        processor.cancel()
 
 
 class KitchenSpotCreate(BaseModel):
