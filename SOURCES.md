@@ -2,6 +2,8 @@
 
 | What | Source | Licence / note |
 | --- | --- | --- |
+| Automatic localization API | [Meta camera API](https://developers.meta.com/horizon/documentation/unity/unity-pca-documentation/) and installed MRUK v205 source | Camera viewport rays and environment-depth raycasts; SDK remains under upstream terms |
+| Minimum experience reference | [Flaivor author post](https://www.reddit.com/r/virtualreality/comments/1d99hhq/how_do_yall_feel_about_cooking_in_vr_flaivor_meta/) | Author's written description and discussion reviewed; video not independently verified frame by frame; no media copied |
 | Documentation organization | [Cut Once](https://github.com/michaelmazilu/cut-once) | Structure used as a reference at the user's request; no construction application code copied |
 | Project direction | Laksh | Cooking-assistant concept, requirements and supplied visual reference |
 | Implementation assistance | OpenAI Codex | Concrete contributions recorded in [CODEX_LOG.md](CODEX_LOG.md) |

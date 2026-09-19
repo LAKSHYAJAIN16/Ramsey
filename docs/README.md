@@ -8,6 +8,8 @@
 | [Team plan](team-plan.md) | Workstreams and handoff checks; no invented assignments |
 | [Critique](critique.md) | Current weaknesses and the next useful proof |
 | [Vision design](vision.md) | CV design reference; includes unimplemented work |
+| [Spatial localization](spatial-localization.md) | Automatic detection-to-depth path and device checks |
+| [Product direction](product-direction.md) | Flaivor baseline and four soft-pivot options |
 | [Expansion ideas](expansion-plans.md) | Optional future scope, not implementation claims |
 | [Deck](../deck.md) | Slide-ready project pitch |
 | [Sources](../SOURCES.md) | Credits and provenance |

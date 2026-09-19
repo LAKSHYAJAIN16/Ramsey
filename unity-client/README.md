@@ -22,4 +22,6 @@ Untethered means no USB/PC VR connection during use. Online guidance still needs
 
 Source import and static project checks pass. The repository preserves newer connection-loss and timer-reset fixes in `RamseyApp.cs` that were absent from the external editor copy. That external copy is not automatically synchronized.
 
-The earlier APK build failed because the disk filled; no new APK or headset validation is claimed. Current acceptance steps are in the build plan above. The new pixel portrait and dismissal behavior still require Editor/device validation.
+The earlier APK build failed because the disk filled; no new APK or headset validation is claimed. Current acceptance steps are in the build plan above. The pixel texture/shader and spatial geometry passed seven Editor checks; dismissal and camera/depth behavior still need device validation.
+
+Automatic [equipment localization](../docs/spatial-localization.md) now runs with monitoring: CV supplies image boxes, Quest supplies measured depth, and two observations confirm a label. Camera and spatial-data permission are required. There is no manual pointing or placement. No reliable continuous moving-object tracking is claimed.

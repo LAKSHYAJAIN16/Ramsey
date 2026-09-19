@@ -41,10 +41,12 @@ Useful: [judge route](docs/judging.md), [deck](deck.md), [Quest controls/build](
 
 ## Honest labels
 
-**Verified locally:** 78 backend tests, browser JavaScript syntax and Unity source-layout checks passed on September 19, 2026. Tests use fake providers. These results predate the new portrait/lifecycle changes.
+**Verified locally:** 89 backend tests pass; seven Unity spatial-geometry/portrait checks pass. Tests use fake providers and synthetic geometry. The new C# types loaded in the Editor; an existing desktop Meta-plugin architecture mismatch prevents treating this as a headset-runtime test.
 
 **Implemented, not verified end to end:** recipe/session logic, sign-in and pairing, voice transport, sampled camera assistance, guarded step progression, plating feedback and the pixel-textured summon-only assistant. The prior APK build failed from disk space; no successful headset cooking session is claimed.
 
-**Vision, not built:** automatic 3D equipment localization and reliable moving-object tracking. Live image/voice provider behavior also needs validation. No certified hazard detection or automatic emergency calling is claimed.
+**New, awaiting hardware validation:** [automatic equipment localization](docs/spatial-localization.md) combines CV boxes with measured Quest depth and confirms world-space labels across observations. It is not yet verified with a live vision provider or physical headset.
+
+**Vision, not built:** reliable moving-object tracking and equipment-linked spatial timers. Live image/voice provider behavior also needs validation. No certified hazard detection or automatic emergency calling is claimed. [Soft pivots and minimum benchmark](docs/product-direction.md).
 
 Credits and licences: [SOURCES.md](SOURCES.md). Codex log: [CODEX_LOG.md](CODEX_LOG.md).

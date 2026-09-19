@@ -14,4 +14,4 @@ The desktop chooses a recipe and authenticates the user. Python owns recipe step
 
 Provider credentials stay on the backend. Quest needs network access to that backend for online features; untethered does not mean that Python runs on the headset. See [setup notes](../infra/README.md) for service details.
 
-The imported Unity project retains the repository's newer `RamseyApp.cs` connection-loss and timer-reset fixes. The external working copy at `C:/Users/laksh/Ramsey` is not automatically synchronized.
+The checked-in Unity project is the source of record. Local Editor copies must be synchronized before testing; machine-specific locations are intentionally omitted.

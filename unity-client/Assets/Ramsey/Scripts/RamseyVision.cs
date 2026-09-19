@@ -10,6 +10,7 @@ namespace Ramsey
         PassthroughCameraAccess cameraAccess;
         EnvironmentRaycastManager depth;
         bool ownsDepth;
+        bool requestedSpatialPermission;
         public RamseyDepthSnapshot LastDepth { get; private set; }
         const string Permission = "horizonos.permission.HEADSET_CAMERA";
         public IEnumerator Capture(Action<byte[]> completed, Action<string> notice)
@@ -22,6 +23,12 @@ namespace Ramsey
                 UnityEngine.Android.Permission.RequestUserPermission(Permission);
                 notice("Allow camera access inside the headset, then tap Check cooking again."); yield break;
             }
+            if (!requestedSpatialPermission && !UnityEngine.Android.Permission.HasUserAuthorizedPermission(OVRPermissionsRequester.ScenePermission))
+            {
+                requestedSpatialPermission = true;
+                UnityEngine.Android.Permission.RequestUserPermission(OVRPermissionsRequester.ScenePermission);
+                notice("Allow spatial data for automatic equipment labels, then start monitoring again."); yield break;
+            }
 #endif
             if (!PassthroughCameraAccess.IsSupported) { notice("Headset camera access is not supported on this device or OS version."); yield break; }
             if (!cameraAccess)
@@ -32,7 +39,8 @@ namespace Ramsey
                 cameraAccess.RequestedResolution = new Vector2Int(1280, 960); go.SetActive(true);
             }
             cameraAccess.enabled = true; notice("Opening camera…");
-            if (!depth && EnvironmentRaycastManager.IsSupported)
+            if (!depth && EnvironmentRaycastManager.IsSupported &&
+                UnityEngine.Android.Permission.HasUserAuthorizedPermission(OVRPermissionsRequester.ScenePermission))
             {
                 depth = FindAnyObjectByType<EnvironmentRaycastManager>();
                 if (!depth) { depth = gameObject.AddComponent<EnvironmentRaycastManager>(); ownsDepth = true; }
