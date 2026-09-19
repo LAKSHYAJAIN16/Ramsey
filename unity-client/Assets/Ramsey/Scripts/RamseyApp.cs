@@ -24,6 +24,7 @@ namespace Ramsey
         TouchScreenKeyboard keyboard;
         AudioSource speaker;
         RamseyAssistant assistant;
+        RamseySpatialLabels spatialLabels;
         bool enteringCode, monitoring, visionBusy, audioBusy, paused, hasPaired;
         float nextFrame;
         public string editorPairCode = "";
@@ -32,6 +33,8 @@ namespace Ramsey
         {
             api = GetComponent<RamseyApi>(); microphone = GetComponent<RamseyVoice>(); vision = GetComponent<RamseyVision>(); anchor = GetComponent<RamseyAnchor>();
             speaker = GetComponent<AudioSource>(); assistant = gameObject.AddComponent<RamseyAssistant>();
+            spatialLabels = gameObject.AddComponent<RamseySpatialLabels>();
+            spatialLabels.viewer = rig.centerEyeAnchor;
             recipe = JsonUtility.FromJson<Recipe>(Resources.Load<TextAsset>("sandwich").text);
             state = new KitchenState { title = recipe.title, total_steps = recipe.steps.Length, step_index = Mathf.Clamp(PlayerPrefs.GetInt("ramsey.offlineStep", 0), 0, recipe.steps.Length - 1), ingredients = recipe.ingredients };
             state.current_step = recipe.steps[state.step_index];
@@ -45,6 +48,7 @@ namespace Ramsey
             cameraCheck.Clicked = () => {
                 if (!api.Connected) { Status("Pair with your desktop recipe first."); return; }
                 monitoring = !monitoring; nextFrame = 0;
+                if (!monitoring) { spatialLabels.Clear(); vision.StopSpatialCapture(); }
                 Status(monitoring ? "Monitoring on: camera frames go to desktop for step checks and plating feedback." : "Monitoring paused.");
                 UpdateMonitorLabel();
             };
@@ -61,6 +65,7 @@ namespace Ramsey
         }
         void Update()
         {
+            if (!api.Connected || paused) { spatialLabels.Clear(); vision.StopSpatialCapture(); }
             microphone.Suppressed = busy || audioBusy || speaker.isPlaying || !api.Connected || paused;
             if (keyboard != null && keyboard.status == TouchScreenKeyboard.Status.Done)
             {
@@ -216,14 +221,18 @@ namespace Ramsey
             yield return vision.Capture(bytes => frame = bytes, message => { if (!microphone.IsRecording && !busy) Status(message); });
             if (frame == null) { monitoring = false; UpdateMonitorLabel(); visionBusy = false; yield break; }
             if (!monitoring || paused) { visionBusy = false; yield break; }
+            var depthFrame = vision.LastDepth;
+            var capturedSession = api.SessionId;
             yield return api.Upload("/api/vision/assist", "photo", frame, "kitchen.jpg", "image/jpeg", json => {
-                if (!monitoring || paused) return;
+                if (!monitoring || paused || capturedSession != api.SessionId) return;
                 var response = JsonUtility.FromJson<AssistResponse>(json);
+                spatialLabels.Observe(response.equipment, depthFrame);
                 if (response.state != null) Apply(JsonUtility.ToJson(response.state));
                 if (!string.IsNullOrEmpty(response.message) && !microphone.IsRecording && !busy) Status(response.message);
+                else Status(spatialLabels.Status);
                 if (response.observation != null && response.observation.hazard != "none")
                 { AlertTone(); }
-                if (state.completed) { monitoring = false; UpdateMonitorLabel(); }
+                if (state.completed) { monitoring = false; spatialLabels.Clear(); vision.StopSpatialCapture(); UpdateMonitorLabel(); }
             });
             visionBusy = false; nextFrame = Time.unscaledTime + 8;
         }
