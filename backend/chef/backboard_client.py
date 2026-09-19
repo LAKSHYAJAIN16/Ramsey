@@ -89,6 +89,31 @@ class BackboardClient:
         resp.raise_for_status()
         return self._normalize(resp.json())
 
+    async def analyze_image(self, image_bytes: bytes, filename: str, prompt: str) -> Dict[str, Any]:
+        """Send a photo + a text prompt, asking for a JSON reply.
+
+        UNVERIFIED (not confirmed by docs): whether Backboard's `files`
+        multipart field is read by a vision-capable model for an arbitrary
+        photo, or is scoped to document/RAG attachments only. If this
+        doesn't pan out live, swap this call for a direct Gemini vision
+        call instead - the brief already flags Gemini as the fallback for
+        image understanding (see Tier 8's "Is it done?" vision idea).
+        """
+        fields = {
+            "content": prompt,
+            "model_name": self.model,
+            "json_output": "true",
+        }
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                f"{BASE_URL}/threads/messages",
+                headers=self._headers(),
+                data=fields,
+                files={"files": (filename, image_bytes, "image/jpeg")},
+            )
+        resp.raise_for_status()
+        return self._normalize(resp.json())
+
     async def submit_tool_outputs(self, thread_id: str, tool_outputs: List[Dict[str, str]]) -> Dict[str, Any]:
         """`tool_outputs`: [{"tool_call_id": ..., "output": <stringified result>}]."""
         async with httpx.AsyncClient(timeout=30) as client:

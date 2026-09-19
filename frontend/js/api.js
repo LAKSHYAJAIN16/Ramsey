@@ -30,6 +30,14 @@ export async function sendChat(sessionId, text) {
   return res.json();
 }
 
+export async function analyzeFridgePhoto(photoFile) {
+  const form = new FormData();
+  form.append("photo", photoFile);
+  const res = await fetch(`${API_BASE}/api/fridge/analyze`, { method: "POST", body: form });
+  if (!res.ok) throw new Error(`fridge analysis failed: ${res.status}`);
+  return res.json();
+}
+
 export async function sendVoice(sessionId, audioBlob) {
   const form = new FormData();
   form.append("session_id", sessionId);

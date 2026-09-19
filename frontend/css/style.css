@@ -86,6 +86,16 @@ button:active {
   display: block;
 }
 
+.fridge-button {
+  cursor: pointer;
+}
+
+#fridge-status {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;

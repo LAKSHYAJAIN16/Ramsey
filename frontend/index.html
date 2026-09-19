@@ -24,6 +24,13 @@
 
       <button id="demo-button" class="link-button">Skip search, load the offline demo recipe</button>
 
+      <label id="fridge-button" class="link-button fridge-button">
+        Or take a photo of your fridge
+        <input id="fridge-input" type="file" accept="image/*" capture="environment" class="hidden" />
+      </label>
+      <div id="fridge-status" class="hidden">Looking at your fridge...</div>
+      <div id="fridge-suggestions" class="chip-row"></div>
+
       <div id="search-status" class="hidden">
         <h3>Racing sources...</h3>
         <div id="source-list"></div>

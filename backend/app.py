@@ -9,9 +9,10 @@ from pydantic import BaseModel
 from backend import config
 from backend.chef.backboard_client import BackboardClient
 from backend.chef.brain import handle_message
+from backend.chef.fridge import suggest_dishes_from_photo
 from backend.chef.memory import MemoryStore
 from backend.chef.session import KitchenSession
-from backend.models import ChatMessage, ChatReply, Recipe
+from backend.models import ChatMessage, ChatReply, FridgeSuggestions, Recipe
 from backend.recipe_engine.browserbase_client import BrowserbaseClient
 from backend.recipe_engine.cache import load_demo_recipe
 from backend.recipe_engine.service import get_recipe
@@ -134,6 +135,16 @@ async def api_chat_voice(session_id: str = Form(...), audio: UploadFile = File(.
         "audio_url": result["audio_url"],
         "state": result["state"],
     }
+
+
+@app.post("/api/fridge/analyze", response_model=FridgeSuggestions)
+async def api_fridge_analyze(photo: UploadFile = File(...)):
+    """Photo of a fridge/pantry -> dish name ideas. Take the recipe race
+    from there with the normal /api/recipe?dish=... call once the cook
+    picks one - this endpoint only suggests, it doesn't fetch full recipes.
+    """
+    image_bytes = await photo.read()
+    return await suggest_dishes_from_photo(_backboard, image_bytes, photo.filename or "fridge.jpg")
 
 
 _frontend_dir = Path(__file__).resolve().parent.parent / "frontend"

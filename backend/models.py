@@ -21,3 +21,8 @@ class ChatReply(BaseModel):
     reply: str
     tool_calls: List[dict] = []
     recipe: Optional[Recipe] = None
+
+
+class FridgeSuggestions(BaseModel):
+    ingredients: List[str] = []
+    suggestions: List[str] = []

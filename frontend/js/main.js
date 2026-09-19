@@ -64,6 +64,36 @@ function setupLauncher() {
 
   document.getElementById("demo-button").addEventListener("click", () => loadRecipe(null, true));
 
+  document.getElementById("fridge-input").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = ""; // allow picking the same file again later
+    if (!file) return;
+
+    const status = document.getElementById("fridge-status");
+    const suggestions = document.getElementById("fridge-suggestions");
+    suggestions.innerHTML = "";
+    status.classList.remove("hidden");
+    status.textContent = "Looking at your fridge...";
+
+    try {
+      const result = await api.analyzeFridgePhoto(file);
+      status.classList.add("hidden");
+      if (!result.suggestions.length) {
+        status.classList.remove("hidden");
+        status.textContent = "Couldn't make out enough to suggest anything - try a closer photo.";
+        return;
+      }
+      result.suggestions.forEach((dish) => {
+        const btn = document.createElement("button");
+        btn.textContent = dish;
+        btn.addEventListener("click", () => loadRecipe(dish));
+        suggestions.appendChild(btn);
+      });
+    } catch (err) {
+      status.textContent = `Couldn't read that photo: ${err.message}`;
+    }
+  });
+
   xrHost.checkSupport().then(({ ar, vr }) => {
     document.getElementById("enter-ar").classList.toggle("hidden", !ar);
     document.getElementById("enter-vr").classList.toggle("hidden", !vr);
