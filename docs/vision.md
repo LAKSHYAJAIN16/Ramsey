@@ -1,5 +1,7 @@
 # Computer vision plan
 
+> Design reference, not a completion report. Quest currently samples frames through `/api/vision/assist`; the older multi-vessel WebSocket loop is separate. Automatic 3D object localization is unfinished. See [current evidence](judging.md).
+
 ## Context
 
 Everything here is built on the same proven pattern already in

@@ -38,7 +38,7 @@ CORRECTION_COOLDOWN_SECONDS = 30
 @dataclass
 class PendingCorrection:
     """A flagged mistake at one cooking vessel, waiting to see if the next
-    check confirms it's fixed. See CV.md's WATCHING/CORRECTING loop.
+    check confirms it's fixed. See docs/vision.md's WATCHING/CORRECTING loop.
     """
 
     issue: str
@@ -74,7 +74,7 @@ class KitchenSession:
         self.timers: List[Timer] = []
         # Keyed per vessel (e.g. "pan, right burner"), not one global flag -
         # two independent mistakes at two different pans (multi-cooking)
-        # get tracked and corrected independently. See CV.md.
+        # get tracked and corrected independently. See docs/vision.md.
         self.pending_corrections: Dict[str, PendingCorrection] = {}
 
     # --- CV correction loop -----------------------------------------------

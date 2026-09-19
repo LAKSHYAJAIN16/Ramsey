@@ -442,7 +442,7 @@ async def ws_vision_monitor(websocket: WebSocket, session_id: str):
     always keeps only the LATEST frame (overwriting anything unprocessed),
     while a separate loop analyzes whatever's freshest whenever it's free -
     so a burst of frames while one analysis is in flight gets collapsed
-    down to the newest one, never queued and processed late. See CV.md.
+    down to the newest one, never queued and processed late. See docs/vision.md.
     """
     await websocket.accept()
     session = _get_or_create_session(session_id)

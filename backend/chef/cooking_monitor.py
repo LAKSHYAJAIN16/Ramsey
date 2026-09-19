@@ -1,5 +1,5 @@
 """The WATCHING/CORRECTING state machine that decides what to DO with a
-CookingCheck - see CV.md. Routes corrections through the existing
+CookingCheck - see docs/vision.md. Routes corrections through the existing
 brain.py persona/tool-call loop instead of a parallel text path, so a
 correction actually sounds like Ramsey and gets logged via
 memory.remember_mistake() (already existed on CookMemory, never called
@@ -52,7 +52,7 @@ async def monitor_cooking(
     image_bytes: bytes,
     filename: str,
 ) -> Dict[str, Any]:
-    """One frame in, one decision out per vessel in frame. See CV.md."""
+    """One frame in, one decision out per vessel in frame. See docs/vision.md."""
     state = session.to_state_dict()
     dish = state["title"]
     current_step = state["current_step"]

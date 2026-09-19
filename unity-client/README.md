@@ -22,4 +22,4 @@ Untethered means no USB/PC VR connection during use. Online guidance still needs
 
 Source import and static project checks pass. The repository preserves newer connection-loss and timer-reset fixes in `RamseyApp.cs` that were absent from the external editor copy. That external copy is not automatically synchronized.
 
-The earlier APK build failed because the disk filled; no new APK or headset validation is claimed. Historical notes in `BUILD-STATUS.md` and `docs/legacy-client-notes.md` describe an earlier client state. Current acceptance steps are in the build plan above.
+The earlier APK build failed because the disk filled; no new APK or headset validation is claimed. Current acceptance steps are in the build plan above. The new pixel portrait and dismissal behavior still require Editor/device validation.

@@ -79,4 +79,4 @@ Prioritize dependable pairing and voice interaction, then equipment-aware guidan
 
 Close: “The recipe stays with you. The help responds to what you are doing.”
 
-Build record: [CODEX_LOG.md](CODEX_LOG.md). Existing references: [README.md](README.md), [Quest client notes](unity-client/README.md), and [expansion plans](EXPANSION_PLANS.md).
+Build record: [CODEX_LOG.md](CODEX_LOG.md). Existing references: [README.md](README.md), [Quest client notes](unity-client/README.md), and [expansion plans](docs/expansion-plans.md).

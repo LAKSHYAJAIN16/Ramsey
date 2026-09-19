@@ -8,7 +8,7 @@ Everything here is pure and stateless: photo in, structured result out,
 no session mutation. The WATCHING/CORRECTING state machine that decides
 what to DO with a CookingCheck lives in cooking_monitor.py, not here -
 keeps this module trivially unit-testable with FakeVisionClient (see
-CV.md's "Where the orchestration lives").
+docs/vision.md's "Where the orchestration lives").
 """
 import json
 import re
