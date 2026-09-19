@@ -63,6 +63,26 @@ function setupLauncher() {
   api.getMe().then(ui.renderAccount).catch(() => ui.renderAccount({ authenticated: false, oauth_ready: false }));
   document.getElementById("auth-button").addEventListener("click", () => { window.location.href = "/api/auth/google/login"; });
   ui.renderDailyMenu(DAILY_MENUS, (menu) => loadRecipe(menu.dish, false, menu));
+  document.getElementById("campaign-fridge-input").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const status = document.getElementById("campaign-plan-status");
+    status.classList.remove("hidden");
+    status.textContent = "Reading your fridge and building a lesson path...";
+    try {
+      const result = await api.analyzeFridgePhoto(file);
+      const plan = result.suggestions.map((dish, index) => ({
+        dish, calories: 350 + index * 60, emoji: ["🥕", "🍳", "🍲"][index] || "🍽️",
+        tag: `Lesson ${index + 1}`, detail: `${index === 0 ? "Start here" : "Unlock after the lesson before"} · from your fridge`,
+      }));
+      if (!plan.length) throw new Error("No dishes found");
+      ui.renderDailyMenu(plan, (menu) => loadRecipe(menu.dish, false, menu));
+      status.textContent = `Your path is ready: ${result.ingredients.slice(0, 5).join(", ")}. Start Lesson 1.`;
+    } catch (err) {
+      status.textContent = "I couldn't build a plan from that image. Try a brighter, closer fridge photo.";
+    }
+  });
   ui.renderMasterChefChallenges(MASTERCHEF_CHALLENGES, (challenge) => loadRecipe(challenge.dish));
   const showTutorial = (tutorial) => {
     selectedTutorial = tutorial;
