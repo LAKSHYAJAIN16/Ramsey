@@ -5,8 +5,11 @@ VR — you see your real kitchen with the recipe floating in it). Say or
 type a dish, Ramsey finds a recipe, walks you through it step by step,
 and talks back.
 
-Target device: Quest 3S. Also runs as a plain laptop fallback (keyboard
-controls, no headset needed) and a full VR fallback.
+Two clients share one FastAPI backend: a native Unity app on the Quest
+3S (spatial anchors, on-headset camera vision) and this repo's website
+(`frontend/`), which is the desktop/laptop companion — recipe search,
+the cooking campaign, chat, voice. The Unity app lives outside this
+repo; see `PLAN.md` for how it talks to the backend.
 
 ## What's here vs. what's a stub
 
@@ -15,8 +18,9 @@ controls, no headset needed) and a full VR fallback.
   offline demo recipe are all implemented and covered by tests that run
   against fakes, no API keys required.
 - **Kitchen view (Tier 2)** — real: step card, ingredient checklist,
-  duration auto-detection + timers, Back/Timer/Next, WebXR AR/VR/laptop
-  entry points, recent recipes, `?q=`/`?demo=1` links.
+  duration auto-detection + timers, Back/Timer/Next, recent recipes,
+  `?q=`/`?demo=1` links. Desktop/laptop browser only — the headset
+  experience is the separate Unity app now, not this page.
 - **Chef (Tier 3)** — real, against documented (not guessed) API shapes
   for both Browserbase Fetch and Backboard's thread/run/tool-call flow —
   see "API shapes used" below for what's confirmed by docs vs. what's
@@ -47,23 +51,28 @@ Open `http://localhost:8000` for the marketing homepage, or go straight
 to `http://localhost:8000/app/` for the laptop view — `?demo=1` skips to
 the offline demo recipe, `?q=shakshuka` searches on load.
 
-On the Quest 3S, open the same `/app/` URL in Quest Browser (same Wi-Fi,
-or host it publicly — see Tier 6) and tap "Enter AR on headset".
+The Quest 3S experience is the separate Unity app (not this website) -
+it talks to this same backend over `/api/*`, including the
+`/api/vision/*` and `/api/kitchen/spots` endpoints built for it.
 
 ## Project layout
 
 ```
 backend/
-  app.py                FastAPI app: recipe, session, chat, chat/voice, fridge endpoints
+  app.py                FastAPI app: recipe, session, chat, chat/voice, fridge,
+                         vision (identify-spot/check-doneness), kitchen-spots
   recipe_engine/         search -> race -> parse -> cache -> demo fallback
-  chef/                  KitchenSession, memory, tool-call loop, Backboard client
+  chef/                  KitchenSession, memory, tool-call loop, Backboard client,
+                         vision.py (photo -> spot ID / doneness, for the Unity client),
+                         kitchen_spots.py (labeled spatial anchors, from Unity)
   tests/                 pytest suite + fakes shaped like the real SDKs
-frontend/                the actual product, served at /app/
-  index.html             single page, dom-overlay UI for WebXR AR
-  js/                     api client, state, ui rendering, voice recorder, XR host
+frontend/                the desktop/laptop companion, served at /app/
+  index.html             single page: campaign/freestyle/masterchef modes, kitchen view
+  js/                     api client, state, ui rendering, voice recorder, firebase auth
 homepage/                marketing landing page, served at /
   index.html             hero, how-it-works, stack, FAQ, CTA - links into /app/
 data/demo_recipe.json    the recipe that always works, even offline
+PLAN.md                  the Unity-pivot plan: what moved where and why
 ```
 
 ## API shapes used
@@ -98,10 +107,10 @@ Still open — verify before the demo (Tier 0):
   `/api/chat/voice` guesses `{"provider": "elevenlabs"}` for both).
 - The Browserbase live-view iframe being embeddable on the launcher page
   (not wired up in the frontend yet — Tier 1 nice-to-have).
-- Mic access during a passthrough session on the Quest.
-- WebXR anchors/hit-test for pinning timers to real pots (Tier 7, not
-  started — `xr.js` requests the `hit-test` feature but doesn't use it
-  yet).
+
+Spatial anchors, on-headset camera vision, and mic access on the Quest
+moved to the Unity app and are tracked there now, not in this repo -
+see `PLAN.md`.
 
 ## Persona
 
