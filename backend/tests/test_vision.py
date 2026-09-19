@@ -1,4 +1,5 @@
 from backend.chef.vision import check_cooking, identify_spot
+import pytest
 
 
 class FakeVisionClient:
@@ -9,6 +10,13 @@ class FakeVisionClient:
     async def analyze_image(self, image_bytes, filename, prompt):
         self.calls.append((image_bytes, filename, prompt))
         return {"content": self.content}
+
+
+@pytest.mark.parametrize('content', [None, [], {}, 'null', '[]', '42', '"bowl"'])
+async def test_non_object_provider_output_is_unknown(content):
+    result = await identify_spot(FakeVisionClient(content), b'frame', 'frame.jpg')
+    assert result.label == 'Other'
+    assert result.confidence == 'low'
 
 
 async def test_identify_spot_parses_clean_json():

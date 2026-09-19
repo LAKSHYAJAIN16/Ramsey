@@ -149,8 +149,11 @@ async def check_kitchen_setup(
 
 
 def _parse_json(text: str) -> Dict[str, Any]:
+    if not isinstance(text, str):
+        return {}
     cleaned = _CODE_FENCE_RE.sub("", text).strip()
     try:
-        return json.loads(cleaned)
+        value = json.loads(cleaned)
+        return value if isinstance(value, dict) else {}
     except (json.JSONDecodeError, TypeError):
         return {}
