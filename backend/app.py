@@ -3,6 +3,7 @@ from typing import Dict, Optional
 
 from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -147,6 +148,18 @@ async def api_fridge_analyze(photo: UploadFile = File(...)):
     return await suggest_dishes_from_photo(_backboard, image_bytes, photo.filename or "fridge.jpg")
 
 
-_frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
+_project_root = Path(__file__).resolve().parent.parent
+_frontend_dir = _project_root / "frontend"
+_homepage_dir = _project_root / "homepage"
+
+@app.get("/app")
+async def app_redirect():
+    return RedirectResponse(url="/app/")
+
+
+# Order matters: more specific mounts must be registered before the
+# catch-all "/" mount, or the app would never be reached.
 if _frontend_dir.exists():
-    app.mount("/", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")
+    app.mount("/app", StaticFiles(directory=str(_frontend_dir), html=True), name="app")
+if _homepage_dir.exists():
+    app.mount("/", StaticFiles(directory=str(_homepage_dir), html=True), name="homepage")

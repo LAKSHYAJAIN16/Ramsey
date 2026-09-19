@@ -43,23 +43,26 @@ Run the server:
 uvicorn backend.app:app --reload --port 8000
 ```
 
-Open `http://localhost:8000` for the laptop view, or `?demo=1` to skip
-straight to the offline demo recipe, or `?q=shakshuka` to search on load.
+Open `http://localhost:8000` for the marketing homepage, or go straight
+to `http://localhost:8000/app/` for the laptop view — `?demo=1` skips to
+the offline demo recipe, `?q=shakshuka` searches on load.
 
-On the Quest 3S, open the same URL in the Quest Browser (same Wi-Fi, or
-host it publicly — see Tier 6) and tap "Enter AR on headset".
+On the Quest 3S, open the same `/app/` URL in Quest Browser (same Wi-Fi,
+or host it publicly — see Tier 6) and tap "Enter AR on headset".
 
 ## Project layout
 
 ```
 backend/
-  app.py                FastAPI app: recipe, session, chat, chat/voice endpoints
+  app.py                FastAPI app: recipe, session, chat, chat/voice, fridge endpoints
   recipe_engine/         search -> race -> parse -> cache -> demo fallback
   chef/                  KitchenSession, memory, tool-call loop, Backboard client
   tests/                 pytest suite + fakes shaped like the real SDKs
-frontend/
+frontend/                the actual product, served at /app/
   index.html             single page, dom-overlay UI for WebXR AR
   js/                     api client, state, ui rendering, voice recorder, XR host
+homepage/                marketing landing page, served at /
+  index.html             hero, how-it-works, stack, FAQ, CTA - links into /app/
 data/demo_recipe.json    the recipe that always works, even offline
 ```
 

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ramsey — AI Chef in Your Kitchen</title>
+<meta name="description" content="Say a dish. Ramsey finds the recipe, floats the steps in your real kitchen, and walks you through it — hands-free, out loud, in AR." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 256 256%22><text y=%22200%22 font-size=%22200%22>🔥</text></svg>" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="grain">
+<div aria-hidden="true" class="grid-rail grid-rail--left"></div>
+<div aria-hidden="true" class="grid-rail grid-rail--right"></div>
+
+<nav class="site-nav">
+  <div class="nav-bar">
+    <div class="nav-links">
+      <a href="#how-it-works" class="nav-link">How it works</a>
+      <a href="#stack" class="nav-link">Stack</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+    </div>
+
+    <a href="#" class="nav-logo"><span>ramsey</span></a>
+
+    <div class="nav-actions">
+      <a href="/app/" class="desktop-only">
+        <button class="glass-btn" type="button">
+          <div class="glass-bg"></div>
+          <span>Open the app
+            <span class="arrow-dot">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 256 256"><path d="M224.49,136.49l-72,72a12,12,0,0,1-17-17L187,140H40a12,12,0,0,1,0-24H187L135.51,64.48a12,12,0,0,1,17-17l72,72A12,12,0,0,1,224.49,136.49Z"></path></svg>
+            </span>
+          </span>
+        </button>
+      </a>
+      <button class="menu-toggle mobile-only" id="menuToggle" aria-label="Toggle menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M228,128a12,12,0,0,1-12,12H40a12,12,0,0,1,0-24H216A12,12,0,0,1,228,128ZM40,76H216a12,12,0,0,0,0-24H40a12,12,0,0,0,0,24ZM216,180H40a12,12,0,0,0,0,24H216a12,12,0,0,0,0-24Z"></path></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#how-it-works">How it works</a>
+  <a href="#stack">Stack</a>
+  <a href="#faq">FAQ</a>
+  <a href="/app/">
+    <button class="glass-btn" type="button">
+      <div class="glass-bg"></div>
+      <span>Open the app ↗</span>
+    </button>
+  </a>
+</div>
+
+<div class="section-divider"></div>
+
+<main>
+<section class="hero">
+  <div class="hero-inner">
+    <h1 class="reveal in-view">Turn any dish into<br />
+      <span class="hero-icon-inline">
+        <span class="text-gradient-flame accent-italic">a chef standing in</span>
+        <span class="hero-emoji">🔥</span>
+        <span>your kitchen.</span>
+      </span>
+    </h1>
+    <p class="lead reveal in-view">Say or type a dish. Ramsey races the web for a real recipe, floats the steps in front of you, and talks you through it — hands-free, out loud, in AR on a Quest 3S.</p>
+    <div class="hero-cta reveal in-view">
+      <form class="glass-form" id="heroForm">
+        <input type="text" id="heroDish" placeholder="e.g. shakshuka" aria-label="Dish name" required />
+        <button type="submit">Cook it
+          <span class="arrow-dot">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M224.49,136.49l-72,72a12,12,0,0,1-17-17L187,140H40a12,12,0,0,1,0-24H187L135.51,64.48a12,12,0,0,1,17-17l72,72A12,12,0,0,1,224.49,136.49Z"></path></svg>
+          </span>
+        </button>
+      </form>
+      <a href="/app/?demo=1" class="hero-link">Skip it, load the offline demo recipe →</a>
+    </div>
+  </div>
+
+  <div class="hero-visual-wrap">
+    <div class="bull-hero">
+      <div class="bull-hero-inner">
+        <div class="mock-card dashboard-img">
+          <div class="mock-step-progress">STEP 3 / 7</div>
+          <div class="mock-step-text">Simmer for 10 minutes, stirring occasionally.</div>
+          <div class="mock-ingredients">
+            <div class="mock-ing done">2 tbsp olive oil</div>
+            <div class="mock-ing done">1 onion, diced</div>
+            <div class="mock-ing">1 can crushed tomatoes</div>
+            <div class="mock-ing">6 eggs</div>
+          </div>
+          <div class="mock-controls">
+            <span>&larr; Back</span><span class="active">Timer</span><span>Next &rarr;</span>
+          </div>
+        </div>
+        <div class="float-card racing">
+          <span class="dot"></span> 3 sources racing...
+        </div>
+        <div class="float-card talk">
+          🎙️ Hold to talk
+        </div>
+        <div class="float-card timer">
+          ⏱️ 4:32 remaining
+        </div>
+      </div>
+    </div>
+    <div aria-hidden="true" class="hero-fade"></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section id="how-it-works">
+  <div class="max-w-7xl px-section">
+    <div class="spacer-48"></div>
+    <div class="section-divider"></div>
+    <div class="section-heading">
+      <h2 class="reveal in-view">Three steps to<br /><span class="text-gradient-fire accent-italic">get cooking.</span></h2>
+    </div>
+    <div class="section-divider"></div>
+    <div class="spacer-48"></div>
+
+    <div class="reveal in-view stagger-1">
+      <div class="section-divider"></div>
+      <div class="feature-row" data-flip="false">
+        <div class="feature-media">
+          <div class="bg bg-1"></div>
+          <div class="card"><div class="mini-mock search-mock">
+            <div class="mini-row">🔎 duckduckgo.com/html?q=shakshuka+recipe</div>
+            <div class="mini-row win">✓ fast fetch — 0.9s — <b>WON</b></div>
+            <div class="mini-row cancelled">✕ live browser — cancelled</div>
+            <div class="mini-row cancelled">✕ live browser — cancelled</div>
+          </div></div>
+        </div>
+        <div class="feature-copy">
+          <span class="num left">01</span>
+          <h3>Say the dish, not the URL</h3>
+          <p>Ramsey races three candidate sources at once through Browserbase. First valid recipe wins — the rest get cancelled, browsers and all.</p>
+          <ul>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Deterministic JSON-LD parse first, ~1 second</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Real Stagehand browser fallback if that fails</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Junk extractions auto-rejected, never shown</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal in-view stagger-2">
+      <div class="section-divider"></div>
+      <div class="feature-row" data-flip="true">
+        <div class="feature-media" style="order:2">
+          <div class="bg bg-2"></div>
+          <div class="card bleed"><div class="mini-mock ar-mock">
+            <div class="mini-glass">Step 5 / 7 &middot; Crack in the eggs</div>
+            <div class="mini-glass small">⏱ 6:00 timer running</div>
+          </div></div>
+        </div>
+        <div class="feature-copy" style="order:1">
+          <span class="num right">02</span>
+          <h3>Cook hands-free, in the air</h3>
+          <p>The recipe floats over your real kitchen through Quest 3S passthrough. Pinch to advance, tick ingredients, or start a timer — no touching a screen with wet hands.</p>
+          <ul>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Durations auto-detected from the recipe text</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Full VR and plain-laptop fallback, same recipe</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Recent dishes and shareable links, no retyping</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal in-view stagger-3">
+      <div class="section-divider"></div>
+      <div class="feature-row" data-flip="false">
+        <div class="feature-media">
+          <div class="bg bg-3"></div>
+          <div class="card"><div class="mini-mock chat-mock">
+            <div class="mini-bubble you">"I'm out of garlic, and double it"</div>
+            <div class="mini-bubble ramsey">Right — swapped for shallot, servings doubled. Keep going.</div>
+          </div></div>
+        </div>
+        <div class="feature-copy">
+          <span class="num left">03</span>
+          <h3>Talk to Ramsey, he edits live</h3>
+          <p>Hold to talk. Ramsey scales servings, swaps ingredients, remembers your allergies across sessions, and never goes quiet mid-cook — even offline.</p>
+          <ul>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Blunt, encouraging persona — never a real voice</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">"What Ramsey knows about you" memory panel</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Interrupt him mid-sentence, any time</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section id="stack">
+  <div class="max-w-7xl px-section"><div class="spacer-48"></div></div>
+
+  <div class="integrations-grid">
+    <div class="integration-heading">
+      <h2>Built on <span class="accent-italic">real infrastructure.</span></h2>
+      <div class="sub"><span class="line"></span><p>Not a mockup</p><span class="line"></span></div>
+    </div>
+    <div class="integration-cell"><span class="stack-badge">Browserbase</span></div>
+    <div class="integration-cell"><span class="stack-badge">Stagehand</span></div>
+    <div class="integration-cell"><span class="stack-badge">Backboard</span></div>
+    <div class="integration-cell"><span class="stack-badge">WebXR</span></div>
+    <div class="integration-cell"><span class="stack-badge">three.js</span></div>
+    <div class="integration-cell"><span class="stack-badge">FastAPI</span></div>
+    <div class="integration-cell"><span class="stack-badge">Quest 3S</span></div>
+    <div class="integration-cell"><span class="stack-badge">pytest</span></div>
+  </div>
+
+  <div class="integrations-mobile">
+    <div class="heading-wrap">
+      <h2>Built on <span class="accent-italic">real infrastructure.</span></h2>
+    </div>
+    <div class="integrations-mobile-grid">
+      <div class="integration-cell"><span class="stack-badge">Browserbase</span></div>
+      <div class="integration-cell"><span class="stack-badge">Stagehand</span></div>
+      <div class="integration-cell"><span class="stack-badge">Backboard</span></div>
+      <div class="integration-cell"><span class="stack-badge">WebXR</span></div>
+      <div class="integration-cell"><span class="stack-badge">three.js</span></div>
+      <div class="integration-cell"><span class="stack-badge">FastAPI</span></div>
+      <div class="integration-cell"><span class="stack-badge">Quest 3S</span></div>
+      <div class="integration-cell"><span class="stack-badge">pytest</span></div>
+    </div>
+    <div class="and-more"><div class="sub"><span class="line"></span><p>29 tests, all against fakes</p><span class="line"></span></div></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section id="faq" class="faq-section">
+  <div class="max-w-7xl">
+    <div class="spacer-48"></div>
+    <div class="section-divider"></div>
+    <div class="faq-grid">
+      <div class="faq-intro">
+        <h2 class="reveal in-view">Questions you'd ask before <span class="accent-italic">putting on a headset.</span></h2>
+        <p class="reveal in-view">Built solo for Hack the North 2026 in about 36 hours. Source is on <a href="https://github.com/LAKSHYAJAIN16/Ramsey" target="_blank" rel="noopener noreferrer">GitHub</a> if you want to see how it works.</p>
+      </div>
+      <div class="faq-list" id="faqList">
+        <div class="faq-item reveal in-view stagger-1">
+          <button class="faq-question" aria-expanded="false">
+            <span class="q-text">Do I need a Quest 3S to use this?</span>
+            <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>No. The Quest 3S is the target device for the full mixed-reality passthrough experience, but the same recipe engine and chef also run as a full VR fallback and a plain laptop view with keyboard controls — same backend, same voice, no headset required.</p></div></div>
+        </div>
+        <div class="faq-item reveal in-view stagger-2">
+          <button class="faq-question" aria-expanded="false">
+            <span class="q-text">What if a recipe source or the model goes down mid-cook?</span>
+            <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>There's always a resolvable path: results get cached per dish, and a fully offline demo recipe is baked in so the view never shows a blank screen, even with no network at all.</p></div></div>
+        </div>
+        <div class="faq-item reveal in-view stagger-3">
+          <button class="faq-question" aria-expanded="false">
+            <span class="q-text">Does Ramsey actually sound like Gordon Ramsay?</span>
+            <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>No — the persona is blunt but encouraging, deliberately not a clone or impression of any real person's voice or likeness. Any resemblance in tone is on purpose; the name is a nod, not an impersonation.</p></div></div>
+        </div>
+        <div class="faq-item reveal in-view stagger-4">
+          <button class="faq-question" aria-expanded="false">
+            <span class="q-text">What can I actually ask it to do?</span>
+            <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>Move between steps, start a timer, read the ingredient list out loud, scale servings ("double it"), swap an ingredient you're out of, and remember allergies or dislikes across future sessions.</p></div></div>
+        </div>
+        <div class="faq-item reveal in-view stagger-5">
+          <button class="faq-question" aria-expanded="false">
+            <span class="q-text">Can it order groceries for me?</span>
+            <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>That's an explored idea, not a shipped one — and even if it lands, it stops at adding a missing ingredient to a cart. No live checkout: real payment automation on someone else's site is a different, much riskier problem.</p></div></div>
+        </div>
+        <div class="faq-item reveal in-view stagger-6">
+          <button class="faq-question" aria-expanded="false">
+            <span class="q-text">Is this a real product I can buy?</span>
+            <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>No — it's a hackathon build, free, source-available, and not for sale. If you want to run it yourself, clone the repo and follow the README.</p></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="section-divider"></div>
+    <div class="spacer-48"></div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section id="cta" class="waitlist-section">
+  <div class="waitlist-overlay"></div>
+  <div class="waitlist-inner">
+    <div class="waitlist-content">
+      <div class="waitlist-grid">
+        <div class="waitlist-text">
+          <h2 class="reveal in-view">Put the headset on,<br /><span class="accent-italic">and start cooking.</span></h2>
+          <p class="reveal in-view">No install, no App Lab review. Open a URL on Quest Browser and Ramsey is <em>already floating in your kitchen</em>.</p>
+          <div class="waitlist-points reveal in-view">
+            <div class="point">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+              <span>Works on AR, VR, <em>or a laptop</em></span>
+            </div>
+            <div class="point">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+              <span>An <em>offline demo dish</em> always works</span>
+            </div>
+            <div class="point">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
+              <span><em>Hold to talk</em> — Ramsey answers out loud</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal in-view">
+          <div class="waitlist-card">
+            <form class="waitlist-form" id="ctaForm">
+              <div>
+                <div class="title">What are you <em>making</em>?</div>
+                <div class="subtitle">Type a dish, or take a <em>photo of your fridge</em>.</div>
+              </div>
+              <div>
+                <label for="ctaDish">Dish name</label>
+                <div class="waitlist-glass-form">
+                  <input id="ctaDish" type="text" placeholder="e.g. spaghetti aglio e olio" aria-label="Dish name" required />
+                  <button type="submit">Cook it
+                    <span class="arrow-dot">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M224.49,136.49l-72,72a12,12,0,0,1-17-17L187,140H40a12,12,0,0,1,0-24H187L135.51,64.48a12,12,0,0,1,17-17l72,72A12,12,0,0,1,224.49,136.49Z"></path></svg>
+                    </span>
+                  </button>
+                </div>
+              </div>
+              <p class="disclaimer">Or just <a href="/app/?demo=1">open the offline demo</a> — no typing needed.</p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+<div class="max-w-7xl px-section"><div class="spacer-48"></div></div>
+<div class="section-divider"></div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-left">
+        <div class="footer-brand">
+          <div class="footer-brand-icon">
+            <div class="footer-brand-icon-inner">🔥</div>
+          </div>
+          <span class="footer-brand-label">Ramsey</span>
+        </div>
+        <div class="footer-wordmark"><span>[ramsey]</span></div>
+        <div class="footer-tagline">
+          <div class="footer-tagline-quote">
+            <p>Blunt, encouraging, and always<br />floating in your kitchen.</p>
+          </div>
+          <div class="footer-badges">
+            <span class="badge-accent">Hack the North 2026</span>
+            <span class="dash">—</span>
+            <span class="badge-muted">Built solo in ~36 hours</span>
+          </div>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/LAKSHYAJAIN16/Ramsey" target="_blank" rel="noopener noreferrer">Source</a>
+          <span class="dot">·</span>
+          <a href="/app/">Open the app</a>
+          <span class="dot">·</span>
+          <button type="button" aria-label="Share Ramsey" class="icon-link" id="shareBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256"><path d="M212,200a36,36,0,1,1-69.85-12.25l-53-34.05a36,36,0,1,1,0-51.4l53-34a36.09,36.09,0,1,1,8.67,13.45l-53,34.05a36,36,0,0,1,0,24.5l53,34.05A36,36,0,0,1,212,200Z"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 Ramsey. A hackathon project, not a company.</p>
+      <p class="disclaimer">Not affiliated with, endorsed by, or an impersonation of Gordon Ramsay.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="section-divider"></div>
+</main>
+
+<script src="js/script.js"></script>
+</body>
+</html>
