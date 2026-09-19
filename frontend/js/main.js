@@ -1,6 +1,6 @@
 import * as api from "./api.js";
 import * as ui from "./ui.js";
-import { CHEF_PACKS, DAILY_MENUS, MASTERCHEF_CHALLENGES, getProgress, getQueryParams, getRecentDishes, getSessionId, logHealthyMeal, pushRecentDish, selectChefPack } from "./state.js";
+import { CHEF_PACKS, DAILY_MENUS, MASTERCHEF_CHALLENGES, TUTORIALS, getProgress, getQueryParams, getRecentDishes, getSessionId, logHealthyMeal, pushRecentDish, selectChefPack } from "./state.js";
 import { VoiceRecorder } from "./voice.js";
 import { XRHost, bindKeyboardFallback } from "./xr.js";
 
@@ -8,6 +8,7 @@ const sessionId = getSessionId();
 const xrHost = new XRHost();
 const localMemory = { allergies: [], dislikes: [] };
 let mealToLog = null;
+let selectedTutorial = TUTORIALS[0];
 
 async function loadRecipe(dish, demo = false, dailyMenu = null) {
   ui.setSearchStatus(true, demo ? ["Loading offline demo recipe..."] : [
@@ -61,6 +62,12 @@ function setupLauncher() {
   ui.renderProgress(getProgress());
   ui.renderDailyMenu(DAILY_MENUS, (menu) => loadRecipe(menu.dish, false, menu));
   ui.renderMasterChefChallenges(MASTERCHEF_CHALLENGES, (challenge) => loadRecipe(challenge.dish));
+  const showTutorial = (tutorial) => {
+    selectedTutorial = tutorial;
+    ui.renderTutorials(TUTORIALS, selectedTutorial.id, showTutorial);
+    ui.renderTutorialDetail(selectedTutorial);
+  };
+  showTutorial(selectedTutorial);
   const renderPacks = () => ui.renderChefPacks(CHEF_PACKS, getProgress().chefPack, (pack) => {
     selectChefPack(pack.id);
     renderPacks();
@@ -69,6 +76,7 @@ function setupLauncher() {
   document.getElementById("mode-campaign").addEventListener("click", () => ui.setCookingMode("campaign"));
   document.getElementById("mode-freestyle").addEventListener("click", () => ui.setCookingMode("freestyle"));
   document.getElementById("mode-masterchef").addEventListener("click", () => ui.setCookingMode("masterchef"));
+  document.getElementById("mode-tutorial").addEventListener("click", () => ui.setCookingMode("tutorial"));
 
   document.getElementById("dish-form").addEventListener("submit", (e) => {
     e.preventDefault();

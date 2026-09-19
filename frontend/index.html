@@ -27,6 +27,7 @@
         <button id="mode-campaign" class="mode-button active" type="button" role="tab" aria-selected="true" aria-controls="campaign-mode">Campaign</button>
         <button id="mode-freestyle" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="freestyle-mode">Freestyle</button>
         <button id="mode-masterchef" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="masterchef-mode">MasterChef</button>
+        <button id="mode-tutorial" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="tutorial-mode">Tutorial</button>
       </div>
 
       <div id="campaign-mode" role="tabpanel">
@@ -85,6 +86,14 @@
         <h2>Take on a signature dish</h2>
         <p class="mode-description">Choose a restaurant-level challenge. Ramsey finds a live recipe through Browserbase, then coaches you through every technical step.</p>
         <div id="masterchef-challenges" class="challenge-list" aria-live="polite"></div>
+      </section>
+
+      <section id="tutorial-mode" class="tutorial-mode hidden" role="tabpanel" aria-labelledby="mode-tutorial">
+        <p class="eyebrow">FOUNDATIONS</p>
+        <h2>Build your kitchen instincts</h2>
+        <p class="mode-description">Short, practical lessons for the moves every cook uses. Learn the why, then try it at your own counter.</p>
+        <div id="tutorial-list" class="tutorial-list" aria-label="Cooking tutorials"></div>
+        <article id="tutorial-detail" class="tutorial-detail" aria-live="polite"></article>
       </section>
     </section>
 

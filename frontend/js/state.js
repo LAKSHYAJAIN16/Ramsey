@@ -17,6 +17,14 @@ export const MASTERCHEF_CHALLENGES = [
   { dish: "risotto alla milanese", time: "75 min challenge", skill: "Stock control · emulsification", emoji: "🍚" },
 ];
 
+export const TUTORIALS = [
+  { id: "chop", icon: "🔪", title: "Chop with control", time: "8 min", goal: "Turn uneven prep into even cooking.", safety: "Keep fingertips curled under in a claw grip; guide the blade with your knuckles, never your fingertips.", steps: ["Square off the ingredient so it has a flat, stable side.", "Plant the knife tip, then use a relaxed rocking motion.", "Work slowly for uniform pieces—speed comes after control."], drill: "Dice half an onion into even 1 cm pieces." },
+  { id: "saute", icon: "🍳", title: "Sauté without steaming", time: "7 min", goal: "Build colour and flavour instead of soggy vegetables.", safety: "Use a dry pan and keep handles turned away from the edge of the stove.", steps: ["Preheat the pan before adding oil.", "Add ingredients in one loose layer; do not crowd the pan.", "Leave food alone long enough to brown, then toss or turn."], drill: "Sauté sliced mushrooms until deeply golden." },
+  { id: "boil", icon: "💨", title: "Boil and blanch", time: "6 min", goal: "Cook through while keeping colour and texture.", safety: "Lower food into water away from you and keep a lid nearby, not on a rolling boil.", steps: ["Salt the water until it tastes pleasantly seasoned.", "Wait for a steady rolling boil before adding food.", "Taste before draining; shock vegetables in ice water when you want them crisp."], drill: "Blanch green beans, then cool them in ice water." },
+  { id: "season", icon: "🧂", title: "Season as you go", time: "5 min", goal: "Make layers of flavour, not a last-minute salt rush.", safety: "Add small pinches, taste, and adjust—especially with salty stock, cheese, or soy sauce.", steps: ["Season ingredients at each stage, not only at the finish.", "Balance salt with acid, sweetness, heat, or fat.", "Taste with a clean spoon after every meaningful change."], drill: "Season a simple tomato sauce in three small adjustments." },
+  { id: "pan", icon: "🔥", title: "Read your pan", time: "6 min", goal: "Know when heat is helping and when it is burning your food.", safety: "Never leave hot oil unattended; if it smokes, remove the pan from heat and let it cool.", steps: ["Start medium and give the pan time to heat evenly.", "Listen for a gentle sizzle, not a violent crackle.", "Adjust heat before food burns—the pan retains heat after the dial moves."], drill: "Toast spices gently until fragrant, then remove them before they darken." },
+];
+
 export const CHEF_PACKS = [
   { id: "ramsey", name: "Ramsey", focus: "Everyday healthy", mark: "R", accent: "tomato" },
   { id: "vikas", name: "Vikas Khanna", focus: "Indian wellness", mark: "VK", accent: "saffron" },

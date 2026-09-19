@@ -4,12 +4,31 @@ export function showScreen(name) {
 }
 
 export function setCookingMode(mode) {
-  ["campaign", "freestyle", "masterchef"].forEach((name) => {
+  ["campaign", "freestyle", "masterchef", "tutorial"].forEach((name) => {
     const active = mode === name;
     document.getElementById(`${name}-mode`).classList.toggle("hidden", !active);
     document.getElementById(`mode-${name}`).classList.toggle("active", active);
     document.getElementById(`mode-${name}`).setAttribute("aria-selected", String(active));
   });
+}
+
+export function renderTutorials(tutorials, selectedId, onPick) {
+  const root = document.getElementById("tutorial-list");
+  root.innerHTML = "";
+  tutorials.forEach((tutorial) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `tutorial-card${tutorial.id === selectedId ? " selected" : ""}`;
+    button.setAttribute("aria-pressed", String(tutorial.id === selectedId));
+    button.innerHTML = `<span aria-hidden="true">${tutorial.icon}</span><span><strong>${tutorial.title}</strong><small>${tutorial.time}</small></span>`;
+    button.addEventListener("click", () => onPick(tutorial));
+    root.appendChild(button);
+  });
+}
+
+export function renderTutorialDetail(tutorial) {
+  const root = document.getElementById("tutorial-detail");
+  root.innerHTML = `<div class="tutorial-detail-head"><span aria-hidden="true">${tutorial.icon}</span><div><p class="eyebrow">${tutorial.time} KITCHEN DRILL</p><h3>${tutorial.title}</h3></div></div><p class="tutorial-goal">${tutorial.goal}</p><ol>${tutorial.steps.map((step) => `<li>${step}</li>`).join("")}</ol><aside><strong>Safety cue</strong><p>${tutorial.safety}</p></aside><div class="tutorial-drill"><span>Practice now</span><strong>${tutorial.drill}</strong></div>`;
 }
 
 export function renderMasterChefChallenges(challenges, onPick) {
