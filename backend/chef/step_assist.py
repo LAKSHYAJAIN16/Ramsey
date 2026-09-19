@@ -9,6 +9,7 @@ from typing import Literal
 
 from backend.chef.vision import _parse_json
 from backend.chef.session import detect_duration_seconds
+from backend.chef.spatial import SPATIAL_PROMPT, parse_equipment
 
 
 class Observation(BaseModel):
@@ -43,7 +44,7 @@ async def assess_frame(client, session, image: bytes, filename: str, plating: bo
         '"evidence":"","requires_confirmation":true,"hazard":"none",'
         '"help":"","plating_tips":[]}. hazard must be none, burning, smoke or fire.'
     )
-    response = await client.analyze_image(image, filename, prompt)
+    response = await client.analyze_image(image, filename, prompt + SPATIAL_PROMPT)
     if session.revision != revision:
         return {"state": session.to_state_dict(), "advanced": False, "message": "Discarded a check for an earlier step."}
     session.last_frame_hash = fingerprint
@@ -55,7 +56,8 @@ async def assess_frame(client, session, image: bytes, filename: str, plating: bo
         return {"state": session.to_state_dict(), "advanced": False, "message": "Camera result unavailable. Use Next when the step is done."}
 
     now = time.monotonic()
-    result = {"observation": observation.model_dump(), "advanced": False}
+    equipment = parse_equipment(_parse_json(response.get("content", "")).get("equipment"))
+    result = {"observation": observation.model_dump(), "advanced": False, "equipment": equipment}
     qualifies = (observation.visible and observation.step_complete and observation.confidence >= .9
                  and bool(observation.evidence.strip()) and not observation.requires_confirmation
                  and observation.hazard == "none" and not session.active_timers()
