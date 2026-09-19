@@ -6,6 +6,8 @@ python-multipart>=0.0.9
 pydantic>=2.7
 python-dotenv>=1.0
 itsdangerous>=2.2
+PyJWT[crypto]>=2.8
+firebase-admin>=6.5
 pytest>=8.2
 pytest-asyncio>=0.23
 

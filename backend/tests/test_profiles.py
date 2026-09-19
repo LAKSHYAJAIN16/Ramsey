@@ -1,14 +1,15 @@
 from backend.profiles import ProfileStore, rank_for_xp
+from backend.tests.fakes.fake_firestore import FakeFirestoreClient
 
 
-def test_google_profile_is_persisted_and_ranked(tmp_path):
-    store = ProfileStore(tmp_path / "profiles.sqlite3")
-    profile = store.upsert_google_user("google-123", "cook@example.com", "Cook", None)
+def test_firebase_profile_is_persisted_and_ranked():
+    store = ProfileStore(FakeFirestoreClient())
+    profile = store.upsert_firebase_user("firebase-123", "cook@example.com", "Cook", None)
 
     assert profile["rank"] == "Prep Cook"
     saved = profile
     for _ in range(5):
-        saved = store.add_completed_meal("google-123", 400)
+        saved = store.add_completed_meal("firebase-123", 400)
 
     assert saved["xp"] == 100
     assert saved["rank"] == "Line Cook"

@@ -1,16 +1,16 @@
-"""SQLite-backed Ramsey profiles and progression.
+"""Firestore-backed Ramsey profiles and progression.
 
-OAuth identity is deliberately separate from cooking sessions: a visitor can
-use Ramsey as a guest, while a signed-in cook gets durable progression.
+Firebase identity is deliberately separate from cooking sessions: a visitor
+can use Ramsey as a guest, while a signed-in cook gets durable, cross-device
+progression stored in Firestore. ProfileStore only relies on the small
+collection().document().get()/.set()/.update() surface, so tests inject
+FakeFirestoreClient instead of touching a real project (same pattern as the
+Browserbase/Backboard fakes).
 """
-import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Dict, Optional
 
-from backend import config
-
-PROFILE_DB_PATH = config.DATA_DIR / "ramsey.sqlite3"
+COLLECTION = "profiles"
 
 RANKS = (
     (0, "Prep Cook"),
@@ -27,75 +27,59 @@ def rank_for_xp(xp: int) -> str:
 
 
 class ProfileStore:
-    def __init__(self, path: Path = PROFILE_DB_PATH):
-        self.path = path
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._create_schema()
+    def __init__(self, client=None):
+        self._client = client
 
-    def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path)
-        connection.row_factory = sqlite3.Row
-        return connection
+    @property
+    def client(self):
+        if self._client is None:
+            from backend.firebase_client import get_firestore_client
+            self._client = get_firestore_client()
+        return self._client
 
-    def _create_schema(self) -> None:
-        with self._connect() as connection:
-            connection.execute(
-                """CREATE TABLE IF NOT EXISTS profiles (
-                    google_sub TEXT PRIMARY KEY,
-                    email TEXT NOT NULL,
-                    display_name TEXT NOT NULL,
-                    avatar_url TEXT,
-                    xp INTEGER NOT NULL DEFAULT 0,
-                    calories INTEGER NOT NULL DEFAULT 0,
-                    meals INTEGER NOT NULL DEFAULT 0,
-                    streak INTEGER NOT NULL DEFAULT 0,
-                    last_cooked_on TEXT,
-                    created_at TEXT NOT NULL,
-                    updated_at TEXT NOT NULL
-                )"""
-            )
+    def _doc(self, uid: str):
+        return self.client.collection(COLLECTION).document(uid)
 
-    def upsert_google_user(self, subject: str, email: str, display_name: str, avatar_url: Optional[str]) -> Dict:
+    def upsert_firebase_user(self, uid: str, email: str, display_name: str, avatar_url: Optional[str]) -> Dict:
         now = datetime.now(timezone.utc).isoformat()
-        with self._connect() as connection:
-            connection.execute(
-                """INSERT INTO profiles (google_sub, email, display_name, avatar_url, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT(google_sub) DO UPDATE SET email=excluded.email,
-                    display_name=excluded.display_name, avatar_url=excluded.avatar_url, updated_at=excluded.updated_at""",
-                (subject, email, display_name, avatar_url, now, now),
-            )
-        return self.get(subject)  # type: ignore[return-value]
+        doc = self._doc(uid)
+        existing = doc.get().to_dict()
+        data = existing or {"xp": 0, "calories": 0, "meals": 0, "streak": 0, "last_cooked_on": None, "created_at": now}
+        data.update(email=email, display_name=display_name, avatar_url=avatar_url, updated_at=now)
+        doc.set(data)
+        return self._serialize(data)
 
-    def get(self, subject: str) -> Optional[Dict]:
-        with self._connect() as connection:
-            row = connection.execute("SELECT * FROM profiles WHERE google_sub = ?", (subject,)).fetchone()
-        return self._serialize(row) if row else None
+    def get(self, uid: str) -> Optional[Dict]:
+        data = self._doc(uid).get().to_dict()
+        return self._serialize(data) if data else None
 
-    def add_completed_meal(self, subject: str, calories: int) -> Optional[Dict]:
-        profile = self.get(subject)
-        if not profile:
+    def add_completed_meal(self, uid: str, calories: int) -> Optional[Dict]:
+        doc = self._doc(uid)
+        existing = doc.get().to_dict()
+        if not existing:
             return None
         today = datetime.now(timezone.utc).date().isoformat()
-        last = profile["last_cooked_on"]
+        last = existing.get("last_cooked_on")
         if last == today:
-            streak = profile["streak"]
+            streak = existing["streak"]
         else:
-            yesterday = (datetime.now(timezone.utc).date().toordinal() - 1)
-            expected = datetime.fromordinal(yesterday).date().isoformat()
-            streak = profile["streak"] + 1 if last == expected else 1
-        with self._connect() as connection:
-            connection.execute(
-                """UPDATE profiles SET xp=xp + 20, calories=calories + ?, meals=meals + 1,
-                streak=?, last_cooked_on=?, updated_at=? WHERE google_sub=?""",
-                (max(0, calories), streak, today, datetime.now(timezone.utc).isoformat(), subject),
-            )
-        return self.get(subject)
+            yesterday = datetime.fromordinal(datetime.now(timezone.utc).date().toordinal() - 1).date().isoformat()
+            streak = existing["streak"] + 1 if last == yesterday else 1
+        updates = {
+            "xp": existing["xp"] + 20,
+            "calories": existing["calories"] + max(0, calories),
+            "meals": existing["meals"] + 1,
+            "streak": streak,
+            "last_cooked_on": today,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        doc.update(updates)
+        existing.update(updates)
+        return self._serialize(existing)
 
     @staticmethod
-    def _serialize(row: sqlite3.Row) -> Dict:
-        profile = dict(row)
-        profile.pop("google_sub", None)
+    def _serialize(data: Dict) -> Dict:
+        profile = dict(data)
         profile["rank"] = rank_for_xp(profile["xp"])
         profile["level"] = profile["xp"] // 100 + 1
         return profile

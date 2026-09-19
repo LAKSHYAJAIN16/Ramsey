@@ -28,6 +28,17 @@ class FridgeSuggestions(BaseModel):
     suggestions: List[str] = []
 
 
+class SpotIdentification(BaseModel):
+    label: str = "Unknown"
+    confidence: str = "low"  # "high" | "medium" | "low"
+
+
+class DonenessCheck(BaseModel):
+    looks_done: bool = False
+    confidence: str = "low"  # "high" | "medium" | "low"
+    feedback: str = ""
+
+
 class ProgressUpdate(BaseModel):
     calories: int = 0
 

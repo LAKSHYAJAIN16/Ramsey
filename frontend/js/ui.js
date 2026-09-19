@@ -1,3 +1,5 @@
+import { renderPixelAvatarSVG } from "./pixel-avatars.js";
+
 export function showScreen(name) {
   document.getElementById("launcher").classList.toggle("hidden", name !== "launcher");
   document.getElementById("kitchen").classList.toggle("hidden", name !== "kitchen");
@@ -28,7 +30,7 @@ export function renderTutorials(tutorials, selectedId, onPick) {
 
 export function renderTutorialDetail(tutorial) {
   const root = document.getElementById("tutorial-detail");
-  root.innerHTML = `<div class="tutorial-detail-head"><span aria-hidden="true">${tutorial.icon}</span><div><p class="eyebrow">${tutorial.time} KITCHEN DRILL</p><h3>${tutorial.title}</h3></div></div><p class="tutorial-goal">${tutorial.goal}</p><ol>${tutorial.steps.map((step) => `<li>${step}</li>`).join("")}</ol><aside><strong>Safety cue</strong><p>${tutorial.safety}</p></aside><div class="tutorial-drill"><span>Practice now</span><strong>${tutorial.drill}</strong></div>`;
+  root.innerHTML = `<div class="tutorial-detail-head"><span class="tutorial-icon-badge" aria-hidden="true">${tutorial.icon}</span><div class="tutorial-detail-head-copy"><h3>${tutorial.title}</h3><span class="time-chip">${tutorial.time} drill</span></div></div><p class="tutorial-goal">${tutorial.goal}</p><ol>${tutorial.steps.map((step) => `<li>${step}</li>`).join("")}</ol><aside><strong>Safety cue</strong><p>${tutorial.safety}</p></aside><div class="tutorial-drill"><span>Practice now</span><strong>${tutorial.drill}</strong></div>`;
 }
 
 export function renderMasterChefChallenges(challenges, onPick) {
@@ -60,7 +62,7 @@ export function renderProgress(progress) {
   document.getElementById("calorie-count").textContent = progress.calories.toLocaleString();
   document.getElementById("meal-count").textContent = `${progress.meals} meal${progress.meals === 1 ? "" : "s"} cooked`;
   document.getElementById("level-number").textContent = Math.floor(progress.xp / 100) + 1;
-  document.getElementById("xp-fill").style.width = `${progress.xp % 100}%`;
+  document.getElementById("xp-fill").style.transform = `scaleX(${(progress.xp % 100) / 100})`;
   document.getElementById("campaign-streak").textContent = progress.streak;
   document.getElementById("campaign-xp").textContent = progress.xp;
   document.getElementById("daily-menu-note").textContent = progress.meals
@@ -85,13 +87,34 @@ export function renderAccount(account) {
 export function renderDailyMenu(menus, onPick) {
   const root = document.getElementById("daily-menu");
   root.innerHTML = "";
-  menus.forEach((menu) => {
+  menus.forEach((menu, index) => {
+    const status = menu.status || "current";
+    const nodeIcon = status === "complete" ? "★" : status === "locked" ? "🔒" : menu.emoji;
+
+    const item = document.createElement("div");
+    item.className = `trail-item trail-item-${index % 2 === 0 ? "left" : "right"}`;
+
     const button = document.createElement("button");
-    button.className = "menu-card";
     button.type = "button";
-    button.innerHTML = `<span class="menu-emoji" aria-hidden="true">${menu.emoji}</span><span class="menu-main"><strong>${menu.dish}</strong><small>${menu.detail}</small></span><span class="menu-meta"><b>${menu.calories}</b><small>kcal</small><em>${menu.tag}</em></span>`;
-    button.addEventListener("click", () => onPick(menu));
-    root.appendChild(button);
+    button.className = `trail-node is-${status}`;
+    button.disabled = status === "locked";
+    button.setAttribute("aria-label", status === "locked" ? `${menu.dish}, locked until the lesson before it is finished` : `${menu.dish}, ${menu.calories} kcal`);
+    button.innerHTML = `<span aria-hidden="true">${nodeIcon}</span>`;
+    if (status === "current") {
+      const bubble = document.createElement("span");
+      bubble.className = "trail-bubble";
+      bubble.textContent = "Start";
+      button.appendChild(bubble);
+    }
+    if (status !== "locked") button.addEventListener("click", () => onPick(menu));
+
+    const label = document.createElement("span");
+    label.className = "trail-label";
+    label.innerHTML = `<strong>${menu.dish}</strong><small>${menu.calories} kcal</small>`;
+
+    item.appendChild(button);
+    item.appendChild(label);
+    root.appendChild(item);
   });
 }
 
@@ -103,7 +126,7 @@ export function renderChefPacks(packs, selectedId, onPick) {
     button.type = "button";
     button.className = `chef-pack ${pack.accent}${pack.id === selectedId ? " selected" : ""}`;
     button.setAttribute("aria-pressed", String(pack.id === selectedId));
-    button.innerHTML = `<span class="chef-mark">${pack.mark}</span><span><strong>${pack.name}</strong><small>${pack.focus}</small></span><i>${pack.id === selectedId ? "Active" : "Choose"}</i>`;
+    button.innerHTML = `<span class="chef-mark">${renderPixelAvatarSVG(pack.id)}</span><span><strong>${pack.name}</strong><small>${pack.focus}</small></span><i>${pack.id === selectedId ? "Active" : "Choose"}</i>`;
     button.addEventListener("click", () => onPick(pack));
     root.appendChild(button);
   });
@@ -118,9 +141,9 @@ export function showSafety(command) {
   const dialog = document.getElementById("safety-dialog");
   const content = document.getElementById("safety-content");
   if (command === "code_red") {
-    content.innerHTML = `<p class="eyebrow">CODE RED</p><h2 id="safety-title">Stop cooking. Check for immediate danger.</h2><p>Move away from smoke, flame, or a gas smell. If anyone is in danger, call emergency services now.</p><a class="emergency-call" href="tel:911">Call 911</a><p class="safety-note">This action is intentionally manual. Ramsey will not place emergency calls automatically.</p>`;
+    content.innerHTML = `<h2 id="safety-title" class="code-red">⚠ Code red — stop cooking</h2><p>Move away from smoke, flame, or a gas smell. If anyone is in danger, call emergency services now.</p><a class="emergency-call" href="tel:911">Call 911</a><p class="safety-note">This action is intentionally manual. Ramsey will not place emergency calls automatically.</p>`;
   } else {
-    content.innerHTML = `<p class="eyebrow">CODE YELLOW · FIRST AID</p><h2 id="safety-title">Pause. Treat the injury.</h2><section class="first-aid-card"><strong>Burn or scald</strong><p>Move away from heat. Cool under cool or lukewarm running water for 20 minutes. Do not use ice, butter, toothpaste, or creams; remove jewellery or loose clothing only if it is not stuck to skin.</p></section><section class="first-aid-card"><strong>Cut or chopped finger</strong><p>Use a clean cloth or dressing and apply firm, direct pressure. Once bleeding is controlled, rinse a small wound with clean water and cover it with a sterile dressing.</p></section><section class="first-aid-card"><strong>Get urgent help now</strong><p>Call 911 for uncontrolled or spurting bleeding, a deep/gaping wound, loss of feeling or movement, a serious/chemical burn, trouble breathing, choking, or loss of consciousness.</p></section><p class="safety-note">This is immediate guidance, not a substitute for professional medical care.</p>`;
+    content.innerHTML = `<h2 id="safety-title" class="code-yellow">⚠ Code yellow — first aid</h2><section class="first-aid-card"><strong>Burn or scald</strong><p>Move away from heat. Cool under cool or lukewarm running water for 20 minutes. Do not use ice, butter, toothpaste, or creams; remove jewellery or loose clothing only if it is not stuck to skin.</p></section><section class="first-aid-card"><strong>Cut or chopped finger</strong><p>Use a clean cloth or dressing and apply firm, direct pressure. Once bleeding is controlled, rinse a small wound with clean water and cover it with a sterile dressing.</p></section><section class="first-aid-card"><strong>Get urgent help now</strong><p>Call 911 for uncontrolled or spurting bleeding, a deep/gaping wound, loss of feeling or movement, a serious/chemical burn, trouble breathing, choking, or loss of consciousness.</p></section><p class="safety-note">This is immediate guidance, not a substitute for professional medical care.</p>`;
   }
   if (!dialog.open) dialog.showModal();
 }
@@ -199,3 +222,4 @@ export function setSearchStatus(visible, sources = []) {
     list.appendChild(div);
   });
 }
+

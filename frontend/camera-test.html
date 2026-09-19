@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ramsey - camera access probe</title>
+<style>
+  body { margin: 0; background: #111; color: #fff; font: 16px/1.5 system-ui, sans-serif; padding: 16px; }
+  video { width: 100%; max-width: 480px; background: #000; border-radius: 8px; }
+  pre { white-space: pre-wrap; word-break: break-word; background: #000; padding: 12px; border-radius: 8px; font-size: 13px; }
+  button { font-size: 18px; padding: 14px 20px; border-radius: 10px; border: none; background: #58cc02; color: #fff; font-weight: 700; }
+  h2 { margin-top: 24px; }
+</style>
+</head>
+<body>
+  <h1>Camera access probe</h1>
+  <p>This page does ONE thing: asks the browser for camera access and reports exactly what it gets. Not part of the app - throwaway diagnostic. Open this on the actual Quest in Quest Browser and tap the button.</p>
+  <button id="go">Request camera access</button>
+  <h2>Result</h2>
+  <pre id="log">(tap the button)</pre>
+  <video id="preview" autoplay playsinline muted></video>
+
+  <script>
+    const log = document.getElementById('log');
+    const preview = document.getElementById('preview');
+    const write = (text) => { log.textContent += '\n' + text; };
+
+    document.getElementById('go').addEventListener('click', async () => {
+      log.textContent = 'navigator.mediaDevices available: ' + Boolean(navigator.mediaDevices);
+      write('secure context (required for camera access): ' + window.isSecureContext);
+
+      try {
+        const before = await navigator.mediaDevices.enumerateDevices();
+        write('\nvideoinput devices BEFORE permission (labels usually blank until granted):');
+        before.filter(d => d.kind === 'videoinput').forEach(d => write('  - ' + (d.label || '(no label yet)') + '  id=' + d.deviceId.slice(0, 12)));
+      } catch (err) {
+        write('enumerateDevices failed: ' + err.message);
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        write('\ngetUserMedia SUCCEEDED.');
+        const track = stream.getVideoTracks()[0];
+        write('track label: ' + track.label);
+        write('track settings: ' + JSON.stringify(track.getSettings(), null, 2));
+        preview.srcObject = stream;
+
+        const after = await navigator.mediaDevices.enumerateDevices();
+        write('\nvideoinput devices AFTER permission:');
+        after.filter(d => d.kind === 'videoinput').forEach(d => write('  - ' + (d.label || '(no label)') + '  id=' + d.deviceId.slice(0, 12)));
+      } catch (err) {
+        write('\ngetUserMedia FAILED: ' + err.name + ' - ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

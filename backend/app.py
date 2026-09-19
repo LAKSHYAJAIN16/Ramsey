@@ -1,9 +1,7 @@
 from pathlib import Path
-import secrets
 from typing import Dict, Optional
-from urllib.parse import urlencode
 
-import httpx
+import jwt
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -15,9 +13,21 @@ from backend import config
 from backend.chef.backboard_client import BackboardClient
 from backend.chef.brain import handle_message
 from backend.chef.fridge import suggest_dishes_from_photo
+from backend.chef.kitchen_spots import KitchenSpotStore
 from backend.chef.memory import MemoryStore
 from backend.chef.session import KitchenSession
-from backend.models import ChatMessage, ChatReply, FridgeSuggestions, ProgressUpdate, Recipe, SafetyCommand
+from backend.chef.vision import check_doneness, identify_spot
+from backend.firebase_auth import verify_firebase_id_token
+from backend.models import (
+    ChatMessage,
+    ChatReply,
+    DonenessCheck,
+    FridgeSuggestions,
+    ProgressUpdate,
+    Recipe,
+    SafetyCommand,
+    SpotIdentification,
+)
 from backend.profiles import ProfileStore
 from backend.recipe_engine.browserbase_client import BrowserbaseClient
 from backend.recipe_engine.cache import load_demo_recipe
@@ -37,6 +47,7 @@ _memory_store = MemoryStore()
 _browserbase = BrowserbaseClient(config.BROWSERBASE_API_KEY, config.BROWSERBASE_PROJECT_ID)
 _backboard = BackboardClient(config.BACKBOARD_API_KEY, config.BACKBOARD_MODEL)
 _profiles = ProfileStore()
+_kitchen_spots = KitchenSpotStore()
 
 
 @app.get("/health")
@@ -45,8 +56,8 @@ async def health():
 
 
 def _current_profile(request: Request) -> Optional[dict]:
-    subject = request.session.get("google_sub")
-    return _profiles.get(subject) if subject else None
+    uid = request.session.get("firebase_uid")
+    return _profiles.get(uid) if uid else None
 
 
 @app.get("/api/me")
@@ -54,68 +65,43 @@ async def api_me(request: Request):
     profile = _current_profile(request)
     return {
         "authenticated": bool(profile),
-        "oauth_ready": bool(config.GOOGLE_CLIENT_ID and config.GOOGLE_CLIENT_SECRET),
+        "oauth_ready": bool(config.FIREBASE_PROJECT_ID),
         "profile": profile,
     }
 
 
 @app.post("/api/me/progress")
 async def api_complete_meal(request: Request, body: ProgressUpdate):
-    subject = request.session.get("google_sub")
-    if not subject:
+    uid = request.session.get("firebase_uid")
+    if not uid:
         raise HTTPException(status_code=401, detail="Sign in to save cooking progress.")
-    profile = _profiles.add_completed_meal(subject, body.calories)
+    profile = _profiles.add_completed_meal(uid, body.calories)
     if not profile:
         raise HTTPException(status_code=401, detail="Profile no longer exists.")
     return profile
 
 
-@app.get("/api/auth/google/login")
-async def google_login(request: Request):
-    if not config.GOOGLE_CLIENT_ID or not config.GOOGLE_CLIENT_SECRET:
-        raise HTTPException(status_code=503, detail="Google OAuth is not configured on this server.")
-    state = secrets.token_urlsafe(32)
-    request.session["oauth_state"] = state
-    params = urlencode({
-        "client_id": config.GOOGLE_CLIENT_ID,
-        "redirect_uri": config.GOOGLE_REDIRECT_URI,
-        "response_type": "code",
-        "scope": "openid email profile",
-        "state": state,
-        "prompt": "select_account",
-    })
-    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{params}")
+class FirebaseSignIn(BaseModel):
+    idToken: str
 
 
-@app.get("/api/auth/google/callback")
-async def google_callback(request: Request, code: str = Query(...), state: str = Query(...)):
-    expected_state = request.session.pop("oauth_state", None)
-    if not expected_state or not secrets.compare_digest(state, expected_state):
-        raise HTTPException(status_code=400, detail="Invalid OAuth state.")
-    token_payload = {
-        "code": code,
-        "client_id": config.GOOGLE_CLIENT_ID,
-        "client_secret": config.GOOGLE_CLIENT_SECRET,
-        "redirect_uri": config.GOOGLE_REDIRECT_URI,
-        "grant_type": "authorization_code",
+@app.post("/api/auth/firebase")
+async def firebase_sign_in(request: Request, body: FirebaseSignIn):
+    if not config.FIREBASE_PROJECT_ID:
+        raise HTTPException(status_code=503, detail="Firebase is not configured on this server.")
+    try:
+        claims = await verify_firebase_id_token(body.idToken)
+    except jwt.InvalidTokenError as exc:
+        raise HTTPException(status_code=401, detail=f"Invalid Firebase token: {exc}")
+    if not claims.get("email"):
+        raise HTTPException(status_code=502, detail="Firebase did not return a usable profile.")
+    _profiles.upsert_firebase_user(claims["sub"], claims["email"], claims.get("name") or claims["email"], claims.get("picture"))
+    request.session["firebase_uid"] = claims["sub"]
+    return {
+        "authenticated": True,
+        "oauth_ready": True,
+        "profile": _profiles.get(claims["sub"]),
     }
-    async with httpx.AsyncClient(timeout=10) as client:
-        token_response = await client.post("https://oauth2.googleapis.com/token", data=token_payload)
-        if token_response.is_error:
-            raise HTTPException(status_code=502, detail="Google token exchange failed.")
-        access_token = token_response.json().get("access_token")
-        user_response = await client.get(
-            "https://openidconnect.googleapis.com/v1/userinfo",
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-    if user_response.is_error:
-        raise HTTPException(status_code=502, detail="Google profile lookup failed.")
-    user = user_response.json()
-    if not user.get("sub") or not user.get("email"):
-        raise HTTPException(status_code=502, detail="Google did not return a usable profile.")
-    _profiles.upsert_google_user(user["sub"], user["email"], user.get("name") or user["email"], user.get("picture"))
-    request.session["google_sub"] = user["sub"]
-    return RedirectResponse(url="/app/")
 
 
 @app.post("/api/auth/logout")
@@ -256,6 +242,51 @@ async def api_fridge_analyze(photo: UploadFile = File(...)):
     """
     image_bytes = await photo.read()
     return await suggest_dishes_from_photo(_backboard, image_bytes, photo.filename or "fridge.jpg")
+
+
+@app.post("/api/vision/identify-spot", response_model=SpotIdentification)
+async def api_identify_spot(photo: UploadFile = File(...)):
+    """Unity headset camera photo of a real-world surface -> a best-guess
+    label (Stove/Counter/Sink/...), for the cook to confirm before pinning
+    a spatial anchor there.
+    """
+    image_bytes = await photo.read()
+    return await identify_spot(_backboard, image_bytes, photo.filename or "spot.jpg")
+
+
+@app.post("/api/vision/check-doneness", response_model=DonenessCheck)
+async def api_check_doneness(session_id: str = Form(...), photo: UploadFile = File(...)):
+    """Unity headset camera photo of the dish mid-cook -> whether it looks
+    right for the current recipe step, with brief spoken-aloud-able feedback.
+    """
+    session = _get_or_create_session(session_id)
+    image_bytes = await photo.read()
+    state = session.to_state_dict()
+    return await check_doneness(_backboard, image_bytes, photo.filename or "dish.jpg", state["title"], state["current_step"])
+
+
+class KitchenSpotCreate(BaseModel):
+    kitchen_id: str
+    label: str
+
+
+@app.post("/api/kitchen/spots")
+async def api_create_kitchen_spot(body: KitchenSpotCreate):
+    """Unity POSTs a confirmed, labeled spatial anchor here so it's backed
+    by the Python backend, not just on-device Unity storage.
+    """
+    return _kitchen_spots.add(body.kitchen_id, body.label)
+
+
+@app.get("/api/kitchen/spots")
+async def api_list_kitchen_spots(kitchen_id: str = Query(...)):
+    return _kitchen_spots.list(kitchen_id)
+
+
+@app.delete("/api/kitchen/spots/{spot_id}")
+async def api_delete_kitchen_spot(spot_id: str, kitchen_id: str = Query(...)):
+    _kitchen_spots.remove(kitchen_id, spot_id)
+    return {"ok": True}
 
 
 _project_root = Path(__file__).resolve().parent.parent

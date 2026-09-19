@@ -3,29 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#38764d" />
+  <meta name="theme-color" content="#3f7d4a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="manifest.webmanifest" />
   <title>Ramsey</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <!-- Laptop / dom-overlay UI. In WebXR immersive-ar this whole tree is
-       used as the dom-overlay root so it floats over the passthrough
-       camera feed; on a laptop it's just a normal page. -->
+  <!-- Desktop/laptop cooking companion. The Quest headset experience
+       (spatial anchors, camera vision) is a separate native Unity app
+       that talks to the same backend - this page is browser-only. -->
   <div id="overlay">
     <section id="launcher" class="screen">
       <header class="app-header">
-        <div>
-          <p class="eyebrow">YOUR KITCHEN PASSPORT</p>
+        <div class="wordmark">
           <h1>Ramsey</h1>
+          <p class="subtitle">Learn to cook, one real kitchen skill at a time.</p>
         </div>
-        <button id="profile-streak" class="streak-stamp" type="button" aria-label="Current healthy cooking streak">
-          <span aria-hidden="true">&#128293;</span><strong id="streak-count">0</strong><small>day streak</small>
-        </button>
-        <div class="account-summary"><span id="rank-label">Guest · Prep Cook</span><button id="auth-button" class="auth-button" type="button">Sign in to save</button></div>
+        <div class="header-stats">
+          <button id="profile-streak" class="streak-stamp" type="button" aria-label="Current healthy cooking streak">
+            <span aria-hidden="true">&#128293;</span><strong id="streak-count">0</strong><small>streak</small>
+          </button>
+          <div class="account-summary"><span id="rank-label">Guest · Prep Cook</span><button id="auth-button" class="auth-button" type="button">Sign in to save</button></div>
+        </div>
       </header>
-      <p class="subtitle">Learn to cook, one real kitchen skill at a time.</p>
 
       <div class="mode-switch" role="tablist" aria-label="Cooking mode">
         <button id="mode-campaign" class="mode-button active" type="button" role="tab" aria-selected="true" aria-controls="campaign-mode">Campaign</button>
@@ -34,31 +35,41 @@
       </div>
 
       <div id="campaign-mode" role="tabpanel">
-      <div class="campaign-gamebar"><span class="heart-meter">♥♥♥♥♥</span><span>🔥 <b id="campaign-streak">0</b></span><span>⚡ <b id="campaign-xp">0</b> XP</span></div>
+      <div class="campaign-gamebar">
+        <span class="heart-meter" aria-label="5 lives remaining">♥ ♥ ♥ ♥ ♥</span>
+        <span class="gamebar-stat streak-stat"><span aria-hidden="true">🔥</span><b id="campaign-streak">0</b></span>
+        <span class="gamebar-stat xp-stat"><span aria-hidden="true">⚡</span><b id="campaign-xp">0</b> XP</span>
+      </div>
       <section class="daily-journey" aria-labelledby="daily-menu-title">
         <div class="journey-heading">
-          <div><p class="eyebrow">UNIT 1 · KITCHEN BASICS</p><h2 id="daily-menu-title">Follow the cooking path</h2></div>
+          <div class="journey-title-row">
+            <span class="unit-chip">Unit 1</span>
+            <h2 id="daily-menu-title">Kitchen basics path</h2>
+          </div>
           <div class="level-badge"><span id="level-number">1</span><small>level</small></div>
         </div>
         <p id="daily-menu-note" class="menu-note">Pick a dish and learn it step by step.</p>
         <div id="daily-menu" class="daily-menu" aria-live="polite"></div>
-        <label class="campaign-scan" for="campaign-fridge-input">Build this week's path from my fridge<input id="campaign-fridge-input" type="file" accept="image/*" capture="environment" class="hidden" /></label>
+        <label class="campaign-scan" for="campaign-fridge-input"><span aria-hidden="true">📷</span> Build this week's path from my fridge<input id="campaign-fridge-input" type="file" accept="image/*" capture="environment" class="hidden" /></label>
         <p id="campaign-plan-status" class="menu-note hidden"></p>
       </section>
 
       <section class="ledger" aria-label="Today's nutrition progress">
         <div class="calorie-orbit"><strong id="calorie-count">0</strong><span>kcal logged</span></div>
-        <div class="ledger-copy"><p class="eyebrow">COOKING PROGRESS</p><strong id="meal-count">0 meals cooked</strong><p>Every completed dish earns 20 XP and grows your cooking level.</p><div class="xp-track" aria-label="Progress to next level"><span id="xp-fill"></span></div></div>
+        <div class="ledger-copy">
+          <strong id="meal-count">0 meals cooked</strong>
+          <p>Every completed dish earns 20 XP and grows your cooking level.</p>
+          <div class="xp-track" aria-label="Progress to next level"><span id="xp-fill"></span></div>
+        </div>
       </section>
 
       <section class="chef-packs" aria-labelledby="chef-pack-title">
-        <div class="section-heading"><div><p class="eyebrow">EXPANSION PACKS</p><h2 id="chef-pack-title">Cook with a new guide</h2></div><span class="pack-count">5 packs</span></div>
+        <div class="section-heading"><h2 id="chef-pack-title">Cook with a new guide</h2><span class="pack-count">5 packs</span></div>
         <div id="chef-pack-list" class="pack-list"></div>
       </section>
 
       <section class="week-one" aria-labelledby="week-one-title">
-        <p class="eyebrow">CAMPAIGN · WEEK 1</p>
-        <h2 id="week-one-title">Kitchen foundations</h2>
+        <h2 id="week-one-title">Week 1 · Kitchen foundations</h2>
         <p class="mode-description">Build the habits that make every recipe easier before moving on to full dishes.</p>
         <div id="tutorial-list" class="tutorial-list" aria-label="Week one cooking lessons"></div>
         <article id="tutorial-detail" class="tutorial-detail" aria-live="polite"></article>
@@ -66,7 +77,6 @@
       </div>
 
       <section id="freestyle-mode" class="freestyle-mode hidden" role="tabpanel" aria-labelledby="mode-freestyle">
-        <p class="eyebrow">FREESTYLE KITCHEN</p>
         <h2>What do you feel like cooking?</h2>
         <p class="mode-description">Name any dish and Ramsey will search live sources through Browserbase, then turn the best recipe into a step-by-step kitchen lesson.</p>
       <form id="dish-form">
@@ -90,13 +100,9 @@
         <h3>Racing sources...</h3>
         <div id="source-list"></div>
       </div>
-
-      <button id="enter-ar" class="hidden">Enter AR on headset</button>
-      <button id="enter-vr" class="hidden">Enter VR</button>
       </section>
 
       <section id="masterchef-mode" class="masterchef-mode hidden" role="tabpanel" aria-labelledby="mode-masterchef">
-        <p class="eyebrow">THE MASTERCHEF KITCHEN</p>
         <h2>Take on a signature dish</h2>
         <p class="mode-description">Choose a restaurant-level challenge. Ramsey finds a live recipe through Browserbase, then coaches you through every technical step.</p>
         <div id="masterchef-challenges" class="challenge-list" aria-live="polite"></div>
@@ -111,7 +117,7 @@
       </div>
 
       <div class="panel meal-log-panel">
-        <div><p class="eyebrow">FINISH THE LESSON</p><strong id="meal-calorie-label">Estimate calories after choosing a daily menu.</strong></div>
+        <div><strong id="meal-calorie-label">Estimate calories after choosing a daily menu.</strong><span class="meal-log-hint">Finish the lesson</span></div>
         <button id="btn-log-meal" type="button">I cooked this</button>
       </div>
 
@@ -145,18 +151,6 @@
     <button id="btn-close-safety" class="link-button" type="button">Back to cooking</button>
   </dialog>
 
-  <!-- three.js scene canvas sits behind the overlay for the passthrough /
-       VR background; hidden entirely on the plain laptop fallback. -->
-  <canvas id="scene-canvas" class="hidden"></canvas>
-
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
-      }
-    }
-  </script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

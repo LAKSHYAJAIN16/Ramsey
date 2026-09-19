@@ -86,7 +86,20 @@ fetch('/api/me').then((response) => response.json()).then((account) => {
     siteAuth.disabled = true;
   }
 }).catch(() => { siteAuth.disabled = true; siteAuth.textContent = 'Sign-in unavailable'; });
-if (siteAuth) siteAuth.addEventListener('click', () => { window.location.href = '/api/auth/google/login'; });
+if (siteAuth) siteAuth.addEventListener('click', async () => {
+  const original = siteAuth.textContent;
+  siteAuth.disabled = true;
+  siteAuth.textContent = 'Signing in...';
+  try {
+    const account = await window.ramseySignInWithGoogle();
+    siteRank.textContent = `${account.profile.display_name} · ${account.profile.rank}`;
+    siteAuth.textContent = 'Profile saved';
+  } catch (err) {
+    console.error('Google sign-in failed:', err);
+    siteAuth.disabled = false;
+    siteAuth.textContent = original;
+  }
+});
 
 // Share button
 const shareBtn = document.getElementById('shareBtn');
