@@ -54,6 +54,7 @@ class KitchenSession:
 
     def __init__(self, recipe: Recipe):
         self.recipe = recipe
+        self.selected_dish = recipe.title
         self.step_index = 0
         self.revision = 0
         self.completion_votes = 0

@@ -198,6 +198,7 @@ async def api_get_recipe(request: Request, dish: str = Query(...), demo: bool = 
     except Exception as exc:
         raise HTTPException(502, "Recipe search provider is unavailable. Try again shortly; no demo was substituted.") from exc
     _sessions[session_id] = KitchenSession(recipe)
+    _sessions[session_id].selected_dish = recipe.title if demo else dish.strip()
     _sessions[session_id].owner_uid = request.session.get("firebase_uid")
     return recipe
 
@@ -279,7 +280,7 @@ class ActionRequest(BaseModel):
 def _save_session_completion(session: KitchenSession):
     if session.completed and session.owner_uid and not session.profile_saved:
         try:
-            profile = _profiles.add_completed_meal(session.owner_uid, 0, session.completion_id)
+            profile = _profiles.add_completed_meal(session.owner_uid, 0, session.completion_id, dish=session.selected_dish)
             session.profile_saved = profile is not None
         except Exception:
             # Completion remains visible locally; retry on the next session read.

@@ -53,7 +53,7 @@ class ProfileStore:
         data = self._doc(uid).get().to_dict()
         return self._serialize(data) if data else None
 
-    def add_completed_meal(self, uid: str, calories: int, completion_id: Optional[str] = None) -> Optional[Dict]:
+    def add_completed_meal(self, uid: str, calories: int, completion_id: Optional[str] = None, dish: Optional[str] = None) -> Optional[Dict]:
         doc = self._doc(uid)
         existing = doc.get().to_dict()
         if not existing:
@@ -78,6 +78,10 @@ class ProfileStore:
         }
         if completion_id:
             updates["completed_sessions"] = [*completions, completion_id]
+        if dish:
+            completed_dishes = existing.get("completed_dishes", [])
+            if dish.casefold() not in {name.casefold() for name in completed_dishes}:
+                updates["completed_dishes"] = [*completed_dishes, dish]
         doc.update(updates)
         existing.update(updates)
         return self._serialize(existing)
@@ -87,4 +91,12 @@ class ProfileStore:
         profile = dict(data)
         profile["rank"] = rank_for_xp(profile["xp"])
         profile["level"] = profile["xp"] // 100 + 1
+        today = datetime.now(timezone.utc).date()
+        last = profile.get("last_cooked_on")
+        yesterday = datetime.fromordinal(today.toordinal() - 1).date().isoformat()
+        if last not in {today.isoformat(), yesterday}:
+            profile["streak"] = 0
+        profile["daily_goal_complete"] = last == today.isoformat()
+        profile["completed_dishes"] = profile.get("completed_dishes", [])
+        profile["next_rank"] = next(({"name": name, "xp": xp} for xp, name in RANKS if xp > profile["xp"]), None)
         return profile
