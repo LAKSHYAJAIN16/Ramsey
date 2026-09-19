@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ramsey</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Laptop / dom-overlay UI. In WebXR immersive-ar this whole tree is
+       used as the dom-overlay root so it floats over the passthrough
+       camera feed; on a laptop it's just a normal page. -->
+  <div id="overlay">
+    <section id="launcher" class="screen">
+      <h1>Ramsey</h1>
+      <p class="subtitle">Say or type a dish. He'll go find it.</p>
+
+      <form id="dish-form">
+        <input id="dish-input" type="text" placeholder="e.g. shakshuka" autocomplete="off" />
+        <button type="submit">Cook it</button>
+      </form>
+
+      <div id="recent-dishes" class="chip-row"></div>
+
+      <button id="demo-button" class="link-button">Skip search, load the offline demo recipe</button>
+
+      <div id="search-status" class="hidden">
+        <h3>Racing sources...</h3>
+        <div id="source-list"></div>
+      </div>
+
+      <button id="enter-ar" class="hidden">Enter AR on headset</button>
+      <button id="enter-vr" class="hidden">Enter VR</button>
+    </section>
+
+    <section id="kitchen" class="screen hidden">
+      <div class="panel step-card">
+        <div class="step-progress" id="step-progress">Step 1 / 1</div>
+        <p id="step-text">...</p>
+      </div>
+
+      <div class="panel timers" id="timers-panel"></div>
+
+      <div class="panel ingredients">
+        <h3>Ingredients <span id="servings-note"></span></h3>
+        <ul id="ingredient-list"></ul>
+      </div>
+
+      <div class="panel controls">
+        <button id="btn-back">&larr; Back</button>
+        <button id="btn-timer">Timer</button>
+        <button id="btn-next">Next &rarr;</button>
+        <button id="btn-talk" class="talk-button">Hold to talk</button>
+      </div>
+
+      <div class="panel chat-log" id="chat-log"></div>
+
+      <div class="panel memory-panel hidden" id="memory-panel">
+        <h3>What Ramsey knows about you</h3>
+        <div id="memory-content"></div>
+      </div>
+
+      <button id="btn-exit" class="link-button">Exit / new dish</button>
+    </section>
+  </div>
+
+  <!-- three.js scene canvas sits behind the overlay for the passthrough /
+       VR background; hidden entirely on the plain laptop fallback. -->
+  <canvas id="scene-canvas" class="hidden"></canvas>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

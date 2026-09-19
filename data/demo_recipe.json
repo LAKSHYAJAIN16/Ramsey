@@ -1,0 +1,28 @@
+{
+  "title": "Shakshuka",
+  "source_url": "offline://demo",
+  "servings": 4,
+  "ingredients": [
+    "2 tbsp olive oil",
+    "1 onion, diced",
+    "1 red bell pepper, diced",
+    "3 cloves garlic, minced",
+    "1 tsp cumin",
+    "1 tsp paprika",
+    "1/2 tsp chili flakes",
+    "1 can (28 oz) crushed tomatoes",
+    "6 eggs",
+    "Salt and pepper to taste",
+    "Fresh parsley, chopped",
+    "Crumbled feta (optional)"
+  ],
+  "steps": [
+    "Heat olive oil in a large skillet over medium heat.",
+    "Add onion and bell pepper, and cook for 5 minutes until softened.",
+    "Stir in garlic, cumin, paprika, and chili flakes. Cook for 1 minute until fragrant.",
+    "Pour in crushed tomatoes, season with salt and pepper, and simmer for 10 minutes.",
+    "Make 6 small wells in the sauce and crack an egg into each.",
+    "Cover and cook for 6-8 minutes until egg whites are set but yolks are still runny.",
+    "Garnish with parsley and feta, then serve straight from the pan."
+  ]
+}
