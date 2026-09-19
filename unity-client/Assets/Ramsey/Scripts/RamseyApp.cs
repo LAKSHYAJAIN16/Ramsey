@@ -142,6 +142,7 @@ namespace Ramsey
         {
             if (!api.Connected) { Status("Pair with your desktop recipe to talk with Ramsey."); return; }
             if (busy || audioBusy || speaker.isPlaying) return;
+            if (assistant.IsVisible && !microphone.IsRecording) { assistant.Dismiss(); Status("Ramsey dismissed. Double tap to summon again."); return; }
             assistant.Open(panel); microphone.Suppressed = false; microphone.Toggle();
         }
         IEnumerator Poll() { busy = true; yield return api.Get($"/api/session/{api.SessionId}", Apply); busy = false; }
@@ -221,7 +222,7 @@ namespace Ramsey
                 if (response.state != null) Apply(JsonUtility.ToJson(response.state));
                 if (!string.IsNullOrEmpty(response.message) && !microphone.IsRecording && !busy) Status(response.message);
                 if (response.observation != null && response.observation.hazard != "none")
-                { assistant.Open(panel); assistant.SetState("Check your cooking"); AlertTone(); }
+                { AlertTone(); }
                 if (state.completed) { monitoring = false; UpdateMonitorLabel(); }
             });
             visionBusy = false; nextFrame = Time.unscaledTime + 8;

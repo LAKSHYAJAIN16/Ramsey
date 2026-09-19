@@ -8,6 +8,9 @@ namespace Ramsey
         TextMesh caption;
         Material material;
         string mode = "Ready";
+        float dismissAt;
+        public bool IsVisible => avatar && avatar.gameObject.activeSelf;
+        public void Dismiss() { if (avatar) avatar.gameObject.SetActive(false); }
         public void Open(Transform panel)
         {
             if (!avatar)
@@ -16,8 +19,11 @@ namespace Ramsey
                 avatar.name = "Ramsey Voice Assistant";
                 Destroy(avatar.GetComponent<Collider>());
                 var face = avatar.GetComponent<Renderer>();
-                var pointer = GetComponent<RamseyPointer>();
-                material = new Material(pointer && pointer.pointerMaterial ? pointer.pointerMaterial : face.sharedMaterial); face.sharedMaterial = material;
+                var shader = Resources.Load<Shader>("Art/PixelPortrait");
+                material = new Material(shader ? shader : face.sharedMaterial.shader);
+                var portrait = Resources.Load<Texture2D>("Art/ramsey-pixel");
+                if (portrait) { portrait.filterMode = FilterMode.Point; portrait.wrapMode = TextureWrapMode.Clamp; }
+                material.mainTexture = portrait; face.sharedMaterial = material;
                 var label = new GameObject("Assistant captions"); label.transform.SetParent(avatar, false);
                 label.transform.localPosition = new Vector3(0, -.9f, -.55f);
                 caption = label.AddComponent<TextMesh>(); caption.anchor = TextAnchor.UpperCenter;
@@ -31,13 +37,18 @@ namespace Ramsey
         public void SetState(string value)
         {
             mode = value;
+            dismissAt = Time.unscaledTime + 20;
             if (!avatar) return;
             caption.text = "RAMSEY | AI voice\n" + value;
             var color = value == "Listening" ? new Color(.25f,.8f,.4f) : value == "Speaking" ? new Color(.25f,.65f,1) : new Color(1,.65f,.2f);
-            material.color = color;
-            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+            caption.color = color;
         }
-        void Update() { if (avatar) avatar.localScale = Vector3.one * (.14f + (mode == "Listening" || mode == "Speaking" ? Mathf.Sin(Time.unscaledTime * 5) * .008f : 0)); }
+        void Update()
+        {
+            if (!IsVisible) return;
+            avatar.localScale = Vector3.one * (.22f + (mode == "Listening" || mode == "Speaking" ? Mathf.Sin(Time.unscaledTime * 5) * .006f : 0));
+            if (mode != "Listening" && mode != "Speaking" && mode != "Thinking" && Time.unscaledTime > dismissAt) Dismiss();
+        }
         void OnDestroy() { if (avatar) Destroy(avatar.gameObject); if (material) Destroy(material); }
     }
 }
