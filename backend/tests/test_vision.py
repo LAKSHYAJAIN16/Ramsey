@@ -1,4 +1,4 @@
-from backend.chef.vision import check_doneness, identify_spot
+from backend.chef.vision import check_cooking, identify_spot
 
 
 class FakeVisionClient:
@@ -43,23 +43,24 @@ async def test_identify_spot_handles_non_json_response():
     assert result.confidence == "low"
 
 
-async def test_check_doneness_parses_clean_json():
-    client = FakeVisionClient('{"looks_done": true, "confidence": "high", "feedback": "Eggs are set, plate it up."}')
-    result = await check_doneness(client, b"bytes", "dish.jpg", "shakshuka", "Cover and cook until eggs are set.")
-    assert result.looks_done is True
-    assert result.feedback == "Eggs are set, plate it up."
+async def test_check_cooking_parses_clean_json():
+    client = FakeVisionClient('{"objects": ["spatula"], "stations": [{"vessel": "pan", "contents": ["eggs"], "doneness": "done", "matches_expected_step": true, "note": "Eggs are set, plate it up."}]}')
+    result = await check_cooking(client, b"bytes", "dish.jpg", "shakshuka", "Cover and cook until eggs are set.")
+    assert result.stations[0].doneness == "done"
+    assert result.stations[0].matches_expected_step is True
+    assert result.stations[0].note == "Eggs are set, plate it up."
 
 
-async def test_check_doneness_prompt_includes_dish_and_step():
-    client = FakeVisionClient('{"looks_done": false, "confidence": "medium", "feedback": "Give it 2 more minutes."}')
-    await check_doneness(client, b"bytes", "dish.jpg", "shakshuka", "Cover and cook until eggs are set.")
+async def test_check_cooking_prompt_includes_dish_and_step():
+    client = FakeVisionClient('{"stations": []}')
+    await check_cooking(client, b"bytes", "dish.jpg", "shakshuka", "Cover and cook until eggs are set.")
     prompt = client.calls[0][2]
     assert "shakshuka" in prompt
     assert "Cover and cook until eggs are set." in prompt
 
 
-async def test_check_doneness_handles_non_json_response():
+async def test_check_cooking_handles_non_json_response():
     client = FakeVisionClient("looks pretty done to me")
-    result = await check_doneness(client, b"bytes", "dish.jpg", "shakshuka", "some step")
-    assert result.looks_done is False
-    assert result.feedback  # non-empty fallback message, never blank
+    result = await check_cooking(client, b"bytes", "dish.jpg", "shakshuka", "some step")
+    assert result.stations == []
+    assert result.objects == []

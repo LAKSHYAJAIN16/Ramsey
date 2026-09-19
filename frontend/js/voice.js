@@ -10,10 +10,13 @@ export class VoiceRecorder {
   }
 
   async start() {
+    if (this.starting || this.mediaRecorder?.state === 'recording') return false;
+    this.starting = true;
     this.interrupt(); // pressing talk always stops Ramsey mid-sentence first
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
+      this.starting = false;
       this.onError(`Mic access denied or unavailable: ${err.message}`);
       return false;
     }
@@ -21,11 +24,12 @@ export class VoiceRecorder {
     this.mediaRecorder = new MediaRecorder(this.stream);
     this.mediaRecorder.ondataavailable = (e) => this.chunks.push(e.data);
     this.mediaRecorder.start();
+    this.starting = false;
     return true;
   }
 
   stop(sendFn) {
-    if (!this.mediaRecorder) return;
+    if (!this.mediaRecorder || this.mediaRecorder.state !== 'recording') return;
     this.mediaRecorder.onstop = async () => {
       const blob = new Blob(this.chunks, { type: "audio/webm" });
       this.stream.getTracks().forEach((t) => t.stop());

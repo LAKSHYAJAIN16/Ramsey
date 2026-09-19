@@ -89,6 +89,7 @@ async def handle_message(
         audio_input=audio_input,
     )
     session.backboard_thread_id = response.get("thread_id") or session.backboard_thread_id
+    transcript = response.get("transcript")
 
     all_tool_calls: List[Dict[str, Any]] = []
     rounds = 0
@@ -110,5 +111,6 @@ async def handle_message(
         "text": text,
         "tool_calls": all_tool_calls,
         "audio_url": response.get("audio_url"),
+        "transcript": transcript,
         "state": session.to_state_dict(),
     }

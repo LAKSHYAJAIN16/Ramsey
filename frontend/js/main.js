@@ -1,18 +1,10 @@
-import * as api from "./api.js";
-import * as ui from "./ui.js";
+import * as api from "./api.js?v=quest-first-1";
+import * as ui from "./ui.js?v=quest-first-1";
 import { signInWithGoogle } from "./firebase-auth.js";
-import { CHEF_PACKS, DAILY_MENUS, MASTERCHEF_CHALLENGES, TUTORIALS, getProgress, getQueryParams, getRecentDishes, getSessionId, logHealthyMeal, pushRecentDish, selectChefPack } from "./state.js";
-import { VoiceRecorder } from "./voice.js";
+import { CHEF_PACKS, DAILY_MENUS, MASTERCHEF_CHALLENGES, TUTORIALS, getProgress, getQueryParams, getRecentDishes, getSessionId, logHealthyMeal, pushRecentDish, selectChefPack, setProfileScope } from "./state.js?v=quest-first-1";
+import { setupSessionControls } from "./session-controls.js?v=quest-first-1";
 
-function bindKeyboardFallback({ onNext, onBack, onTimer }) {
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") onNext();
-    if (e.key === "ArrowLeft") onBack();
-    if (e.key.toLowerCase() === "t") onTimer();
-  });
-}
-
-const sessionId = getSessionId();
+let sessionId;
 const localMemory = { allergies: [], dislikes: [] };
 let mealToLog = null;
 let selectedTutorial = TUTORIALS[0];
@@ -55,37 +47,16 @@ async function loadRecipe(dish, demo = false, dailyMenu = null) {
     const state = await api.getSessionState(sessionId);
     ui.renderKitchenState(state);
     mealToLog = dailyMenu || { dish: recipe.title, calories: 450 };
-    ui.setMealToLog(mealToLog.dish, mealToLog.calories);
-    ui.appendChatLine("ramsey", `Right, ${recipe.title}. Let's get moving.`);
+    const source = document.getElementById('recipe-source'); source.replaceChildren();
+    if (recipe.method === 'demo') source.textContent = 'Bundled demo recipe — not a live recipe search.';
+    else if (/^https?:\/\//.test(recipe.source_url)) {
+      const link = document.createElement('a'); link.href = recipe.source_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      link.textContent = 'View original recipe source'; source.appendChild(link);
+    }
   } catch (err) {
-    ui.setSearchStatus(false);
-    ui.appendChatLine("ramsey", `Couldn't reach the kitchen: ${err.message}. Loading the demo recipe instead.`);
-    await loadRecipe(null, true);
+    ui.showScreen('launcher');
+    ui.setSearchStatus(true, [err.message || 'Recipe search failed. Try another dish.']);
   }
-}
-
-async function applyAction(action, index = null) {
-  const state = await api.sendAction(sessionId, action, index);
-  if (!state.error) ui.renderKitchenState(state);
-}
-
-function trackMemoryFromToolCalls(toolCalls) {
-  let changed = false;
-  for (const call of toolCalls || []) {
-    if (call.name === "remember_allergy" && call.arguments?.item) {
-      if (!localMemory.allergies.includes(call.arguments.item)) {
-        localMemory.allergies.push(call.arguments.item);
-        changed = true;
-      }
-    }
-    if (call.name === "remember_dislike" && call.arguments?.item) {
-      if (!localMemory.dislikes.includes(call.arguments.item)) {
-        localMemory.dislikes.push(call.arguments.item);
-        changed = true;
-      }
-    }
-  }
-  if (changed) ui.renderMemory(localMemory);
 }
 
 function setupLauncher() {
@@ -184,86 +155,48 @@ function setupLauncher() {
 }
 
 function setupKitchenControls() {
-  document.getElementById("btn-back").addEventListener("click", () => applyAction("back"));
-  document.getElementById("btn-next").addEventListener("click", () => applyAction("next"));
-  document.getElementById("btn-timer").addEventListener("click", () => applyAction("start_timer"));
-  document.getElementById("btn-exit").addEventListener("click", () => {
-    ui.showScreen("launcher");
-    ui.renderProgress(getProgress());
-    renderPath((menu) => loadRecipe(menu.dish, false, menu));
+  document.getElementById('btn-exit').addEventListener('click', () => {
+    ui.showScreen('launcher'); api.getMe().then(ui.renderAccount).catch(() => {});
+    ui.renderProgress(getProgress()); renderPath(menu => loadRecipe(menu.dish, false, menu));
   });
-  document.getElementById("btn-log-meal").addEventListener("click", () => {
-    if (!mealToLog) return;
-    const result = logHealthyMeal(mealToLog.dish, mealToLog.calories);
-    ui.renderProgress(result.progress);
-    if (result.duplicate) {
-      ui.appendChatLine("ramsey", "That dish is already in today's log. Consistency beats double-counting.");
-    } else {
-      ui.appendChatLine("ramsey", `Lesson complete: ${mealToLog.calories} kcal and 20 XP. That's day ${result.progress.streak} of your streak.`);
-      document.getElementById("btn-log-meal").disabled = true;
-      api.saveCompletedMeal(mealToLog.calories).then((profile) => ui.renderAccount({ authenticated: true, profile })).catch(() => {});
-    }
-  });
-  document.getElementById("btn-close-safety").addEventListener("click", () => document.getElementById("safety-dialog").close());
-
-  document.getElementById("ingredient-list").addEventListener("click", (e) => {
-    const li = e.target.closest("li");
-    if (li) applyAction("toggle_ingredient", Number(li.dataset.index));
-  });
-
-  bindKeyboardFallback({
-    onNext: () => applyAction("next"),
-    onBack: () => applyAction("back"),
-    onTimer: () => applyAction("start_timer"),
-  });
-
-  setInterval(() => {
-    if (!document.getElementById("kitchen").classList.contains("hidden")) {
-      api.getSessionState(sessionId).then((state) => {
-        if (!state.error) ui.renderKitchenState(state);
-      });
-    }
-  }, 1000);
+  let polling = false;
+  setInterval(async () => {
+    if (polling || document.getElementById('kitchen').classList.contains('hidden')) return;
+    polling = true;
+    try { ui.renderKitchenState(await api.getSessionState(sessionId)); }
+    catch (error) { document.getElementById('session-connection').textContent = error.message; }
+    finally { polling = false; }
+  }, 2000);
 }
 
-function setupVoice() {
-  const talkButton = document.getElementById("btn-talk");
-  const recorder = new VoiceRecorder({
-    onResult: (result) => {
-      ui.appendChatLine("ramsey", result.reply || "...");
-      if (result.state) ui.renderKitchenState(result.state);
-      trackMemoryFromToolCalls(result.tool_calls);
-    },
-    onError: (message) => ui.appendChatLine("ramsey", `(mic issue: ${message})`),
-    onSpeakingChange: (speaking) => talkButton.classList.toggle("recording", speaking),
-  });
-
-  const start = async (e) => {
-    e.preventDefault();
-    const ok = await recorder.start();
-    if (ok) talkButton.classList.add("recording");
-  };
-  const stop = (e) => {
-    e.preventDefault();
-    talkButton.classList.remove("recording");
-    recorder.stop((blob) => api.sendVoice(sessionId, blob));
-  };
-
-  talkButton.addEventListener("mousedown", start);
-  talkButton.addEventListener("touchstart", start);
-  talkButton.addEventListener("mouseup", stop);
-  talkButton.addEventListener("touchend", stop);
-}
-
-function main() {
+function startApp(account) {
+  setProfileScope(account.uid); sessionId = getSessionId();
+  document.getElementById('sign-in-gate').classList.add('hidden');
+  document.getElementById('overlay').classList.remove('hidden');
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/app/sw.js").catch(() => {});
   setupLauncher();
   setupKitchenControls();
-  setupVoice();
+  setupSessionControls(sessionId);
 
   const { dish, demo, mode } = getQueryParams();
   if (["campaign", "freestyle", "masterchef"].includes(mode)) ui.setCookingMode(mode);
   if (dish || demo) loadRecipe(dish, demo);
 }
 
+async function main() {
+  const status = document.getElementById('sign-in-status');
+  const button = document.getElementById('sign-in-start');
+  button.disabled = true;
+  try {
+    const account = await api.getMe();
+    if (account.authenticated) { startApp(account); return; }
+    status.textContent = account.oauth_ready ? 'Your recipes and points belong to your account.' : 'Google sign-in is not configured on the desktop server.';
+    button.disabled = !account.oauth_ready;
+  } catch { status.textContent = 'Cannot reach the desktop server. Start it, then reload this page.'; }
+  button.addEventListener('click', async () => {
+    button.disabled = true; status.textContent = 'Opening Google sign-in…';
+    try { startApp(await signInWithGoogle()); }
+    catch (error) { status.textContent = error.message; button.disabled = false; }
+  });
+}
 main();

@@ -49,6 +49,23 @@
   font-family: "Nunito", "Segoe UI", sans-serif;
 }
 
+.quest-session { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.sign-in-gate { max-width: 600px; margin: 12vh auto; padding: 32px; display: grid; gap: 24px; }
+.sign-in-gate h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.12; }
+.sign-in-gate p { line-height: 1.6; }
+.sign-in-gate a { color: var(--ink); text-underline-offset: 4px; }
+.quest-session > div { flex: 1 1 260px; }
+.quest-session > p { flex-basis: 100%; overflow-wrap: anywhere; }
+#pair-status:empty, #session-points:empty { display: none; }
+#pair-status { font-weight: 800; color: var(--ink); }
+.chef-question { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.chef-question label { flex-basis: 100%; font-weight: 800; }
+.chef-question input { flex: 1 1 220px; min-width: 0; font-size: 16px; padding: 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); }
+.plating-assist > * + * { margin-top: 14px; }
+.plating-assist p { line-height: 1.6; max-width: 70ch; }
+.plating-assist label { display: block; font-weight: 800; }
+.plating-assist input { max-width: 100%; font-size: 16px; }
+
 /* ---------------------------------------------------------------------
    Base / reset
 --------------------------------------------------------------------- */

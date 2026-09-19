@@ -1,5 +1,6 @@
 from backend.recipe_engine.cache import RecipeCache, load_demo_recipe
-from backend.recipe_engine.service import get_recipe
+from backend.recipe_engine.service import get_recipe, RecipeNotFound
+import pytest
 from backend.tests.fakes.fake_browserbase import FakeBrowserbaseClient, html_with_recipe
 
 
@@ -19,10 +20,10 @@ def test_cache_roundtrip():
     assert cache.get("shakshuka") is recipe  # case-insensitive
 
 
-async def test_service_falls_back_to_demo_when_nothing_resolves():
+async def test_service_reports_failure_without_substituting_a_demo():
     client = FakeBrowserbaseClient(search_results=["https://dead.com"], fail_urls=["https://dead.com"], browser_extract_by_url={"https://dead.com": None})
-    recipe = await get_recipe(client, "nonexistent dish 12345", use_cache=False)
-    assert recipe.method == "demo"
+    with pytest.raises(RecipeNotFound):
+        await get_recipe(client, "nonexistent dish 12345", use_cache=False)
 
 
 async def test_service_returns_real_recipe_when_found():

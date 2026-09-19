@@ -1,0 +1,13 @@
+.git
+.venv
+.env
+.env.*
+**/__pycache__
+.pytest_cache
+.test-tmp
+backend/serviceAccountKey.json
+**/*serviceAccountKey*.json
+backend/data
+unity-client
+builds
+*.log

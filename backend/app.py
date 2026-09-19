@@ -1,10 +1,13 @@
 import asyncio
 import base64
+import secrets
+import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import jwt
-from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
+from starlette.requests import HTTPConnection
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
@@ -19,6 +22,7 @@ from backend.chef.fridge import suggest_dishes_from_photo
 from backend.chef.kitchen_spots import KitchenSpotStore
 from backend.chef.memory import MemoryStore
 from backend.chef.session import KitchenSession
+from backend.chef.step_assist import assess_frame
 from backend.chef.vision import check_cooking, check_hazard, check_kitchen_setup, identify_spot
 from backend.firebase_auth import verify_firebase_id_token
 from backend.models import (
@@ -36,9 +40,47 @@ from backend.models import (
 from backend.profiles import ProfileStore
 from backend.recipe_engine.browserbase_client import BrowserbaseClient
 from backend.recipe_engine.cache import load_demo_recipe
-from backend.recipe_engine.service import get_recipe
+from backend.recipe_engine.service import get_recipe, RecipeNotFound
 
-app = FastAPI(title="Ramsey")
+async def require_cook(connection: HTTPConnection):
+    path = connection.url.path
+    if path in {"/health", "/api/me", "/api/auth/firebase", "/api/auth/logout", "/api/pair", "/app"}:
+        return
+    uid = connection.session.get("firebase_uid")
+    token = connection.headers.get("authorization", "").removeprefix("Bearer ")
+    grant = _quest_tokens.get(token)
+    if grant and grant[2] < time.monotonic():
+        _quest_tokens.pop(token, None); grant = None
+    if not uid and not grant:
+        raise HTTPException(401, "Sign in with Google before starting a cooking session.")
+    sid = connection.path_params.get("session_id") or connection.query_params.get("session_id")
+    if path == '/api/recipe' and not sid: sid = 'default'
+    body = {}
+    if isinstance(connection, Request) and connection.method in {"POST", "DELETE"}:
+        if "application/json" in connection.headers.get("content-type", ""):
+            try: body = await connection.json()
+            except ValueError: body = {}
+        elif "multipart/form-data" in connection.headers.get("content-type", ""):
+            body = await connection.form()
+        if hasattr(body, "get"):
+            sid = sid or body.get("session_id")
+    if grant:
+        if path not in {f"/api/session/{grant[0]}", f"/api/session/{grant[0]}/action", "/api/chat", "/api/chat/voice", "/api/vision/assist"} or sid != grant[0]:
+            raise HTTPException(403, "Quest access is limited to its paired cooking session.")
+        uid = grant[1]
+    if sid:
+        session = _sessions.get(sid)
+        if session and session.owner_uid != uid:
+            raise HTTPException(403, "This cooking session belongs to another user.")
+        if not session and path != "/api/recipe" and not path.endswith("/recipe"):
+            raise HTTPException(404, "Select a recipe on the desktop first.")
+    if path.startswith('/api/kitchen/spots'):
+        kitchen_id = connection.query_params.get('kitchen_id') or (body.get('kitchen_id') if hasattr(body, 'get') else None)
+        if kitchen_id != uid:
+            raise HTTPException(403, "Kitchen spots belong to your profile.")
+
+
+app = FastAPI(title="Ramsey", dependencies=[Depends(require_cook)])
 app.add_middleware(SessionMiddleware, secret_key=config.SESSION_SECRET, same_site="lax", https_only=False)
 app.add_middleware(
     CORSMiddleware,
@@ -48,6 +90,8 @@ app.add_middleware(
 )
 
 _sessions: Dict[str, KitchenSession] = {}
+_pair_codes: dict[str, tuple[str, float]] = {}
+_quest_tokens: dict[str, tuple[str, str, float]] = {}
 _memory_store = MemoryStore()
 _browserbase = BrowserbaseClient(config.BROWSERBASE_API_KEY, config.BROWSERBASE_PROJECT_ID)
 _backboard = BackboardClient(config.BACKBOARD_API_KEY, config.BACKBOARD_MODEL)
@@ -70,6 +114,7 @@ async def api_me(request: Request):
     profile = _current_profile(request)
     return {
         "authenticated": bool(profile),
+        "uid": request.session.get("firebase_uid") if profile else None,
         "oauth_ready": bool(config.FIREBASE_PROJECT_ID),
         "profile": profile,
     }
@@ -100,10 +145,14 @@ async def firebase_sign_in(request: Request, body: FirebaseSignIn):
         raise HTTPException(status_code=401, detail=f"Invalid Firebase token: {exc}")
     if not claims.get("email"):
         raise HTTPException(status_code=502, detail="Firebase did not return a usable profile.")
-    _profiles.upsert_firebase_user(claims["sub"], claims["email"], claims.get("name") or claims["email"], claims.get("picture"))
+    try:
+        _profiles.upsert_firebase_user(claims["sub"], claims["email"], claims.get("name") or claims["email"], claims.get("picture"))
+    except RuntimeError as exc:
+        raise HTTPException(503, "Google verified your account, but profile storage is not configured. Add the Firebase Admin service account to the desktop backend.") from exc
     request.session["firebase_uid"] = claims["sub"]
     return {
         "authenticated": True,
+        "uid": claims["sub"],
         "oauth_ready": True,
         "profile": _profiles.get(claims["sub"]),
     }
@@ -111,6 +160,11 @@ async def firebase_sign_in(request: Request, body: FirebaseSignIn):
 
 @app.post("/api/auth/logout")
 async def logout(request: Request):
+    uid = request.session.get("firebase_uid")
+    for token, grant in list(_quest_tokens.items()):
+        if grant[1] == uid: del _quest_tokens[token]
+    for code, (sid, _) in list(_pair_codes.items()):
+        if sid in _sessions and _sessions[sid].owner_uid == uid: del _pair_codes[code]
     request.session.clear()
     return {"ok": True}
 
@@ -136,9 +190,15 @@ async def api_safety_command(body: SafetyCommand):
 
 
 @app.get("/api/recipe", response_model=Recipe)
-async def api_get_recipe(dish: str = Query(...), demo: bool = Query(False), session_id: str = Query("default")):
-    recipe = load_demo_recipe() if demo else await get_recipe(_browserbase, dish)
+async def api_get_recipe(request: Request, dish: str = Query(...), demo: bool = Query(False), session_id: str = Query("default")):
+    try:
+        recipe = load_demo_recipe() if demo else await get_recipe(_browserbase, dish)
+    except RecipeNotFound as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(502, "Recipe search provider is unavailable. Try again shortly; no demo was substituted.") from exc
     _sessions[session_id] = KitchenSession(recipe)
+    _sessions[session_id].owner_uid = request.session.get("firebase_uid")
     return recipe
 
 
@@ -147,6 +207,46 @@ async def api_get_session(session_id: str):
     session = _sessions.get(session_id)
     if session is None:
         return {"error": "no active session"}
+    _save_session_completion(session)
+    return session.to_state_dict()
+
+
+@app.post("/api/session/{session_id}/pair")
+async def create_pair_code(session_id: str):
+    if session_id not in _sessions:
+        raise HTTPException(404, "Choose a recipe on the desktop first.")
+    now = time.monotonic()
+    for key, (sid, expiry) in list(_pair_codes.items()):
+        if expiry < now or sid == session_id:
+            del _pair_codes[key]
+    code = secrets.token_hex(4).upper()
+    _pair_codes[code] = (session_id, now + 600)
+    return {"code": code, "expires_in": 600}
+
+
+class PairRequest(BaseModel):
+    code: str
+
+
+@app.post("/api/pair")
+async def join_pair(body: PairRequest):
+    entry = _pair_codes.pop(body.code.strip().upper(), None)
+    if not entry or entry[1] < time.monotonic() or entry[0] not in _sessions:
+        raise HTTPException(404, "Pairing code invalid or expired. Generate a new one on the desktop.")
+    sid = entry[0]
+    token = secrets.token_urlsafe(32)
+    _quest_tokens[token] = (sid, _sessions[sid].owner_uid, time.monotonic() + 12 * 3600)
+    return {"session_id": sid, "token": token, "state": _sessions[sid].to_state_dict()}
+
+
+@app.post("/api/session/{session_id}/recipe")
+async def api_load_session_recipe(request: Request, session_id: str, recipe: Recipe):
+    """Start a session from the Quest's bundled or cached recipe."""
+    if not recipe.steps or not all(step.strip() for step in recipe.steps) or not recipe.title.strip():
+        raise HTTPException(status_code=422, detail="A recipe needs a title and non-empty steps.")
+    session = KitchenSession(recipe)
+    session.owner_uid = request.session.get("firebase_uid")
+    _sessions[session_id] = session
     return session.to_state_dict()
 
 
@@ -160,7 +260,7 @@ async def api_chat(message: ChatMessage):
         session = KitchenSession(load_demo_recipe())
         _sessions[message.session_id] = session
 
-    memory = _memory_store.get(message.session_id)
+    memory = _memory_store.get(session.owner_uid or message.session_id)
     result = await handle_message(_backboard, session, memory, message.text)
     _memory_store.save()
 
@@ -174,6 +274,16 @@ async def api_chat(message: ChatMessage):
 class ActionRequest(BaseModel):
     action: str
     index: Optional[int] = None
+
+
+def _save_session_completion(session: KitchenSession):
+    if session.completed and session.owner_uid and not session.profile_saved:
+        try:
+            profile = _profiles.add_completed_meal(session.owner_uid, 0, session.completion_id)
+            session.profile_saved = profile is not None
+        except Exception:
+            # Completion remains visible locally; retry on the next session read.
+            session.profile_saved = False
 
 
 def _get_or_create_session(session_id: str) -> KitchenSession:
@@ -199,6 +309,8 @@ async def api_session_action(session_id: str, body: ActionRequest):
         session.back_step()
     elif body.action == "repeat":
         pass
+    elif body.action == "complete":
+        session.complete()
     elif body.action == "start_timer":
         session.start_timer()
     elif body.action == "toggle_ingredient" and body.index is not None:
@@ -206,7 +318,30 @@ async def api_session_action(session_id: str, body: ActionRequest):
     else:
         return {"error": f"unknown or incomplete action: {body.action}"}
 
+    _save_session_completion(session)
     return session.to_state_dict()
+
+
+@app.post("/api/vision/assist")
+async def api_vision_assist(session_id: str = Form(...), photo: UploadFile = File(...), plating: bool = Form(True)):
+    session = _sessions.get(session_id)
+    if session is None:
+        raise HTTPException(404, "Pair with an active desktop recipe first.")
+    if session.monitor_busy:
+        raise HTTPException(409, "A camera check is already running.")
+    session.monitor_busy = True
+    try:
+        image = await photo.read(4 * 1024 * 1024 + 1)
+        if not image or len(image) > 4 * 1024 * 1024:
+            raise HTTPException(413, "Send a non-empty image under 4 MB.")
+        result = await assess_frame(_backboard, session, image, photo.filename or "kitchen.jpg", plating)
+        if _sessions.get(session_id) is not session:
+            return {"state": _sessions[session_id].to_state_dict(), "advanced": False, "message": "Recipe changed; checking again shortly."}
+        _save_session_completion(session)
+        result["state"] = session.to_state_dict()
+        return result
+    finally:
+        session.monitor_busy = False
 
 
 @app.post("/api/chat/voice")
@@ -215,19 +350,22 @@ async def api_chat_voice(session_id: str = Form(...), audio: UploadFile = File(.
     server-side, so nothing depends on browser Web Speech support.
     """
     session = _get_or_create_session(session_id)
-    memory = _memory_store.get(session_id)
-    audio_bytes = await audio.read()
+    memory = _memory_store.get(session.owner_uid or session_id)
+    audio_bytes = await audio.read(4 * 1024 * 1024 + 1)
+    if not audio_bytes or len(audio_bytes) > 4 * 1024 * 1024:
+        raise HTTPException(413, "Send a non-empty recording under 4 MB.")
 
-    # Provider/model choice here is a guess (docs.backboard.io/sdk/voice
-    # shows the {"stt": {...}, "tts": {...}} shape but not a default
-    # provider) - swap in a real one once a key is live (Tier 0).
+    # Explicit provider/model/voice, per Backboard's HTTP voice contract.
     result = await handle_message(
         _backboard,
         session,
         memory,
         user_text="",
         audio_input=audio_bytes,
-        voice={"stt": {"provider": "elevenlabs"}, "tts": {"provider": "elevenlabs"}},
+        voice={
+            "stt": {"provider": "elevenlabs", "model": "scribe_v2"},
+            "tts": {"provider": "openai", "model": "tts-1", "voice": "alloy", "output_format": "mp3"},
+        },
     )
     _memory_store.save()
 
@@ -235,6 +373,7 @@ async def api_chat_voice(session_id: str = Form(...), audio: UploadFile = File(.
         "reply": result["text"],
         "tool_calls": result["tool_calls"],
         "audio_url": result["audio_url"],
+        "transcript": result.get("transcript"),
         "state": result["state"],
     }
 

@@ -1,0 +1,1 @@
+Source: Unity MCP positioned camera capture of Assets/Ramsey/Scenes/RamseyKitchen.unity, September 19, 2026. Original: C:/Users/laksh/Ramsey/Captures/screenshot-20260919-064115.png. Unedited engine rendering, not a headset photograph or an AI-generated image.

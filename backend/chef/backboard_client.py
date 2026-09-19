@@ -74,11 +74,14 @@ class BackboardClient:
         async with httpx.AsyncClient(timeout=30) as client:
             if audio_input is not None:
                 # multipart/form-data is required to attach a binary audio file
+                # Quest records PCM WAV; the browser companion records WebM.
+                is_wav = audio_input[:4] == b"RIFF" and audio_input[8:12] == b"WAVE"
+                audio_name, audio_type = ("utterance.wav", "audio/wav") if is_wav else ("utterance.webm", "audio/webm")
                 resp = await client.post(
                     f"{BASE_URL}/threads/messages",
                     headers=self._headers(),
                     data=fields,
-                    files={"audio_file": ("utterance.webm", audio_input, "audio/webm")},
+                    files={"audio_file": (audio_name, audio_input, audio_type)},
                 )
             else:
                 resp = await client.post(
@@ -127,12 +130,27 @@ class BackboardClient:
 
     @staticmethod
     def _normalize(data: Dict[str, Any]) -> Dict[str, Any]:
-        voice_records = _get(data, "voice_records", "voiceRecords", default={}) or {}
-        tts = voice_records.get("tts") if isinstance(voice_records, dict) else None
+        transcript, audio_url = None, None
+        content = _get(data, "content", "message", default="")
+        messages = data.get("messages") or []
+        for message in [data, *messages]:
+            if not isinstance(message, dict):
+                continue
+            records = _get(message, "voice_records", "voiceRecords", default={}) or {}
+            if not isinstance(records, dict):
+                continue
+            stt, tts = records.get("stt") or {}, records.get("tts") or {}
+            if isinstance(stt, dict):
+                transcript = stt.get("transcript") or transcript
+            if isinstance(tts, dict):
+                audio_url = _get(tts, "audio_url", "audioUrl") or audio_url
+            if message.get("role") == "assistant" and isinstance(message.get("content"), str):
+                content = message["content"]
         return {
             "thread_id": _get(data, "thread_id", "threadId"),
             "status": _get(data, "status", default="COMPLETED"),
-            "content": _get(data, "content", "message", default=""),
+            "content": content if isinstance(content, str) else "",
             "tool_calls": _get(data, "tool_calls", "toolCalls", default=[]) or [],
-            "audio_url": tts.get("audio_url") if isinstance(tts, dict) else None,
+            "audio_url": audio_url,
+            "transcript": transcript,
         }

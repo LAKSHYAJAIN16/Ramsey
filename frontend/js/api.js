@@ -1,15 +1,32 @@
 const API_BASE = "";
 
+async function checkedJson(response) {
+  if (!response.ok) {
+    let detail;
+    try { detail = (await response.json()).detail; } catch {}
+    throw new Error(typeof detail === 'string' ? detail : `Couldn't reach Ramsey (${response.status}). Check the desktop server and try again.`);
+  }
+  return response.json();
+}
+
+export async function createPairCode(sessionId) {
+  return checkedJson(await fetch(`/api/session/${encodeURIComponent(sessionId)}/pair`, { method: 'POST' }));
+}
+
+export async function checkFood(sessionId, photo) {
+  const form = new FormData(); form.append('session_id', sessionId); form.append('photo', photo); form.append('plating', 'true');
+  return checkedJson(await fetch('/api/vision/assist', { method: 'POST', body: form }));
+}
+
 export async function getRecipe(sessionId, dish, demo = false) {
   const params = new URLSearchParams({ session_id: sessionId, dish, demo: demo ? "1" : "0" });
   const res = await fetch(`${API_BASE}/api/recipe?${params}`);
-  if (!res.ok) throw new Error(`recipe fetch failed: ${res.status}`);
-  return res.json();
+  return checkedJson(res);
 }
 
 export async function getSessionState(sessionId) {
   const res = await fetch(`${API_BASE}/api/session/${sessionId}`);
-  return res.json();
+  return checkedJson(res);
 }
 
 export async function sendAction(sessionId, action, index = null) {
@@ -18,7 +35,7 @@ export async function sendAction(sessionId, action, index = null) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, index }),
   });
-  return res.json();
+  return checkedJson(res);
 }
 
 export async function sendChat(sessionId, text) {
@@ -27,7 +44,7 @@ export async function sendChat(sessionId, text) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, text }),
   });
-  return res.json();
+  return checkedJson(res);
 }
 
 export async function sendSafetyCommand(phrase) {
@@ -69,5 +86,5 @@ export async function sendVoice(sessionId, audioBlob) {
   form.append("session_id", sessionId);
   form.append("audio", audioBlob, "utterance.webm");
   const res = await fetch(`${API_BASE}/api/chat/voice`, { method: "POST", body: form });
-  return res.json();
+  return checkedJson(res);
 }

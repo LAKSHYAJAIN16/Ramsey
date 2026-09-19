@@ -1,0 +1,3 @@
+# Quest cooking surface
+
+An extension of the existing Ramsey cooking interface, optimized for operating while standing in a kitchen. A single stable world-space white panel presents recipe title, step progress, the current instruction, a status area, and large action controls. Green marks the primary Next action; blue marks voice and camera actions. Charcoal text provides contrast against the opaque panel. The panel is placed 1.3 metres ahead and can be recentered. It does not continuously follow the head. Camera uploads require an explicit action. Offline and online modes are clearly distinguished.

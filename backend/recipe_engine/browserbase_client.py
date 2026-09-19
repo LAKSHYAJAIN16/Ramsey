@@ -37,7 +37,7 @@ the demo (Tier 0).
 from __future__ import annotations
 
 from typing import List, Optional
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urljoin, urlparse, parse_qs
 
 import httpx
 
@@ -80,8 +80,11 @@ class BrowserbaseClient:
         soup = BeautifulSoup(html, "html.parser")
         links: List[str] = []
         for a in soup.select("a.result__a"):
-            href = a.get("href")
-            if href and href.startswith("http"):
+            href = urljoin("https://duckduckgo.com", a.get("href") or "")
+            parsed = urlparse(href)
+            if parsed.hostname in {"duckduckgo.com", "www.duckduckgo.com"}:
+                href = parse_qs(parsed.query).get("uddg", [""])[0]
+            if urlparse(href).scheme in {"http", "https"} and href not in links:
                 links.append(href)
             if len(links) >= limit:
                 break

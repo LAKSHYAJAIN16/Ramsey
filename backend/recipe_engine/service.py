@@ -7,12 +7,12 @@ from backend.recipe_engine.race import SourceClient, race_recipe_sources
 _cache = RecipeCache()
 
 
-async def get_recipe(client: SourceClient, dish_name: str, use_cache: bool = True) -> Recipe:
-    """Search, race sources, and fall back to the offline demo recipe.
+class RecipeNotFound(Exception):
+    pass
 
-    This never raises for "recipe not found" - the stage should never show
-    a blank screen, so a resolvable demo recipe is the worst case.
-    """
+
+async def get_recipe(client: SourceClient, dish_name: str, use_cache: bool = True) -> Recipe:
+    """Return an actual recipe or an explicit failure; never substitute another dish."""
     if use_cache:
         cached = _cache.get(dish_name)
         if cached is not None:
@@ -22,7 +22,7 @@ async def get_recipe(client: SourceClient, dish_name: str, use_cache: bool = Tru
     recipe = await race_recipe_sources(client, urls)
 
     if recipe is None:
-        recipe = load_demo_recipe()
+        raise RecipeNotFound("No usable recipe found. Try a more specific dish name; the demo is available separately.")
     else:
         _cache.set(dish_name, recipe)
 

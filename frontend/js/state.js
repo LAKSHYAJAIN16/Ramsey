@@ -1,6 +1,9 @@
-const RECENT_KEY = "ramsey_recent_recipes";
-const SESSION_KEY = "ramsey_session_id";
-const PROGRESS_KEY = "ramsey_healthy_progress";
+let RECENT_KEY, SESSION_KEY, PROGRESS_KEY;
+export function setProfileScope(uid) {
+  RECENT_KEY = `ramsey_recent_recipes_${uid}`;
+  SESSION_KEY = `ramsey_session_id_${uid}`;
+  PROGRESS_KEY = `ramsey_healthy_progress_${uid}`;
+}
 
 const DEFAULT_PROGRESS = { calories: 0, meals: 0, xp: 0, streak: 0, lastMealDate: null, loggedDishes: [], chefPack: "ramsey" };
 

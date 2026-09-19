@@ -10,10 +10,17 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <section id="sign-in-gate" class="sign-in-gate" aria-labelledby="sign-in-title">
+    <h1 id="sign-in-title">Your kitchen starts here.</h1>
+    <p>Sign in to choose a recipe, connect your Quest, and keep your cooking progress in your own profile.</p>
+    <button id="sign-in-start" type="button">Sign in with Google</button>
+    <p id="sign-in-status" role="status">Checking your account…</p>
+    <a href="/">Back to Ramsey</a>
+  </section>
   <!-- Desktop/laptop cooking companion. The Quest headset experience
        (spatial anchors, camera vision) is a separate native Unity app
        that talks to the same backend - this page is browser-only. -->
-  <div id="overlay">
+  <div id="overlay" class="hidden">
     <section id="launcher" class="screen">
       <header class="app-header">
         <div class="wordmark">
@@ -111,37 +118,24 @@
     </section>
 
     <section id="kitchen" class="screen hidden">
+      <div class="panel quest-session" aria-labelledby="quest-heading">
+        <div><h2 id="quest-heading">Send your recipe to Quest</h2>
+          <p id="session-connection" role="status">Recipe ready on desktop. Pair your Quest to cook hands-free.</p></div>
+        <button id="btn-pair-quest" type="button">Get Quest pairing code</button>
+        <p id="pair-status" role="status"></p>
+        <p id="session-points" role="status"></p>
+      </div>
       <div class="panel step-card">
         <div class="step-progress" id="step-progress">Step 1 / 1</div>
         <p id="step-text">...</p>
       </div>
 
-      <div class="panel meal-log-panel">
-        <div><strong id="meal-calorie-label">Estimate calories after choosing a daily menu.</strong><span class="meal-log-hint">Finish the lesson</span></div>
-        <button id="btn-log-meal" type="button">I cooked this</button>
+      <div class="panel">
+        <h2>Continue in your Quest</h2>
+        <p>Put on the headset for voice help, timers, automatic step checks, plating assistance, and completion points. Your desktop keeps the cooking session running.</p>
+        <p id="recipe-source"></p>
+        <p id="quest-setup-status">Headset setup required: the native Quest app must be installed before pairing. The current APK build is not ready yet.</p>
       </div>
-
-      <div class="panel timers" id="timers-panel"></div>
-
-      <div class="panel ingredients">
-        <h3>Ingredients <span id="servings-note"></span></h3>
-        <ul id="ingredient-list"></ul>
-      </div>
-
-      <div class="panel controls">
-        <button id="btn-back">&larr; Back</button>
-        <button id="btn-timer">Timer</button>
-        <button id="btn-next">Next &rarr;</button>
-        <button id="btn-talk" class="talk-button">Hold to talk</button>
-      </div>
-
-      <div class="panel chat-log" id="chat-log"></div>
-
-      <div class="panel memory-panel hidden" id="memory-panel">
-        <h3>What Ramsey knows about you</h3>
-        <div id="memory-content"></div>
-      </div>
-
       <button id="btn-exit" class="link-button">Exit / new dish</button>
     </section>
   </div>
@@ -151,6 +145,6 @@
     <button id="btn-close-safety" class="link-button" type="button">Back to cooking</button>
   </dialog>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js?v=quest-first-1"></script>
 </body>
 </html>

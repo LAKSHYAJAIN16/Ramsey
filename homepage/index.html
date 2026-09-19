@@ -66,7 +66,8 @@
         <span>your kitchen.</span>
       </span>
     </h1>
-    <p class="lead reveal in-view">Say or type a dish. Ramsey races the web for a real recipe, floats the steps in front of you, and talks you through it — hands-free, out loud, in AR on a Quest 3S.</p>
+    <p class="lead reveal in-view">Choose a recipe on your desktop. Pair your Quest. Cook with a voice assistant, camera-assisted steps, and plating feedback in your real kitchen.</p>
+    <p class="demo-status">Hackathon prototype: desktop demo available. Quest installation and camera/voice checks are still being validated.</p>
     <div class="hero-cta reveal in-view">
       <form class="glass-form" id="heroForm">
         <input type="text" id="heroDish" placeholder="e.g. shakshuka" aria-label="Dish name" required />
@@ -76,7 +77,7 @@
           </span>
         </button>
       </form>
-      <a href="/app/?demo=1" class="hero-link">Skip it, load the offline demo recipe →</a>
+      <a href="/app/?demo=1" class="hero-link">Try the desktop demo recipe →</a>
     </div>
   </div>
 
@@ -113,12 +114,12 @@
 
 <section id="modes" class="mode-launcher">
   <div class="max-w-7xl px-section">
-    <p class="launcher-eyebrow">CHOOSE YOUR KITCHEN</p>
-    <h2>Start on the website.<br /><span class="accent-italic">Cook in WebXR.</span></h2>
-    <p>Pick a path here, then Ramsey carries the selected experience into your Quest or laptop kitchen.</p>
+    
+    <h2>Start on the website.<br /><span class="accent-italic">Cook on Quest.</span></h2>
+    <p>Sign in with Google to keep your own recipes and progress. Your desktop runs the cooking session; the wireless Quest brings it into your kitchen.</p>
     <div class="launcher-grid">
       <a href="/app/?mode=campaign" class="launcher-card"><span>01</span><h3>Campaign</h3><p>Structured cooking progress, Week 1 foundations, and daily dishes.</p></a>
-      <a href="/app/?mode=freestyle" class="launcher-card"><span>02</span><h3>Freestyle</h3><p>Name any dish. Browserbase finds the recipe; WebXR walks you through it.</p></a>
+      <a href="/app/?mode=freestyle" class="launcher-card"><span>02</span><h3>Freestyle</h3><p>Choose a dish on desktop, then send its steps to your paired Quest.</p></a>
       <a href="/app/?mode=masterchef" class="launcher-card"><span>03</span><h3>MasterChef</h3><p>Restaurant-level challenges for cooks ready to push their technique.</p></a>
     </div>
   </div>
@@ -150,7 +151,7 @@
         </div>
         <div class="feature-copy">
           <span class="num left">01</span>
-          <h3>Say the dish, not the URL</h3>
+          <h3>Choose it on your desktop</h3>
           <p>Ramsey races three candidate sources at once through Browserbase. First valid recipe wins — the rest get cancelled, browsers and all.</p>
           <ul>
             <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Deterministic JSON-LD parse first, ~1 second</span></li>
@@ -173,11 +174,11 @@
         </div>
         <div class="feature-copy" style="order:1">
           <span class="num right">02</span>
-          <h3>Cook hands-free, in the air</h3>
-          <p>The recipe floats over your real kitchen through Quest 3S passthrough. Pinch to advance, tick ingredients, or start a timer — no touching a screen with wet hands.</p>
+          <h3>Pair your Quest and get cooking</h3>
+          <p>An installed Unity app displays your desktop recipe in Quest passthrough. Camera checks can advance visibly completed steps; you stay in control with Next and Back.</p>
           <ul>
             <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Durations auto-detected from the recipe text</span></li>
-            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Full VR and plain-laptop fallback, same recipe</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Desktop and headset share one cooking session</span></li>
             <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Recent dishes and shareable links, no retyping</span></li>
           </ul>
         </div>
@@ -196,12 +197,12 @@
         </div>
         <div class="feature-copy">
           <span class="num left">03</span>
-          <h3>Talk to Ramsey, he edits live</h3>
-          <p>Hold to talk. Ramsey scales servings, swaps ingredients, remembers your allergies across sessions, and never goes quiet mid-cook — even offline.</p>
+          <h3>Double tap. Ask your chef.</h3>
+          <p>Double tap the table to open Ramsey, a cube-shaped voice assistant for this prototype. Ask for help, read your transcription, and hear a spoken reply. Voice needs a connected desktop and available AI services.</p>
           <ul>
             <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Blunt, encouraging persona — never a real voice</span></li>
             <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">"What Ramsey knows about you" memory panel</span></li>
-            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Interrupt him mid-sentence, any time</span></li>
+            <li><span class="check"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.2 6L6.5 2" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span><span class="text">Plating feedback and points for completed recipes</span></li>
           </ul>
         </div>
       </div>
@@ -222,8 +223,8 @@
     <div class="integration-cell"><span class="stack-badge">Browserbase</span></div>
     <div class="integration-cell"><span class="stack-badge">Stagehand</span></div>
     <div class="integration-cell"><span class="stack-badge">Backboard</span></div>
-    <div class="integration-cell"><span class="stack-badge">WebXR</span></div>
-    <div class="integration-cell"><span class="stack-badge">three.js</span></div>
+    <div class="integration-cell"><span class="stack-badge">Unity</span></div>
+    <div class="integration-cell"><span class="stack-badge">Firebase</span></div>
     <div class="integration-cell"><span class="stack-badge">FastAPI</span></div>
     <div class="integration-cell"><span class="stack-badge">Quest 3S</span></div>
     <div class="integration-cell"><span class="stack-badge">pytest</span></div>
@@ -237,13 +238,13 @@
       <div class="integration-cell"><span class="stack-badge">Browserbase</span></div>
       <div class="integration-cell"><span class="stack-badge">Stagehand</span></div>
       <div class="integration-cell"><span class="stack-badge">Backboard</span></div>
-      <div class="integration-cell"><span class="stack-badge">WebXR</span></div>
-      <div class="integration-cell"><span class="stack-badge">three.js</span></div>
+      <div class="integration-cell"><span class="stack-badge">Unity</span></div>
+      <div class="integration-cell"><span class="stack-badge">Firebase</span></div>
       <div class="integration-cell"><span class="stack-badge">FastAPI</span></div>
       <div class="integration-cell"><span class="stack-badge">Quest 3S</span></div>
       <div class="integration-cell"><span class="stack-badge">pytest</span></div>
     </div>
-    <div class="and-more"><div class="sub"><span class="line"></span><p>29 tests, all against fakes</p><span class="line"></span></div></div>
+    <div class="and-more"><div class="sub"><span class="line"></span><p>Python backend · Firebase profiles · native Unity client</p><span class="line"></span></div></div>
   </div>
 </section>
 
@@ -264,14 +265,14 @@
             <span class="q-text">Do I need a Quest 3S to use this?</span>
             <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
           </button>
-          <div class="faq-answer"><div class="faq-answer-inner"><p>No. The Quest 3S is the target device for the full mixed-reality passthrough experience, but the same recipe engine and chef also run as a full VR fallback and a plain laptop view with keyboard controls — same backend, same voice, no headset required.</p></div></div>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>You can try recipe selection, step controls, and your profile on desktop. The mixed-reality experience uses the native Quest app paired with that same desktop session. A USB tether is not needed during cooking.</p></div></div>
         </div>
         <div class="faq-item reveal in-view stagger-2">
           <button class="faq-question" aria-expanded="false">
             <span class="q-text">What if a recipe source or the model goes down mid-cook?</span>
             <span class="q-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 256 256"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"></path></svg></span>
           </button>
-          <div class="faq-answer"><div class="faq-answer-inner"><p>There's always a resolvable path: results get cached per dish, and a fully offline demo recipe is baked in so the view never shows a blank screen, even with no network at all.</p></div></div>
+          <div class="faq-answer"><div class="faq-answer-inner"><p>A bundled demo recipe lets you test the desktop flow without a live recipe search. Sign-in and the desktop server are still required. AI conversation and camera feedback require their online providers.</p></div></div>
         </div>
         <div class="faq-item reveal in-view stagger-3">
           <button class="faq-question" aria-expanded="false">
@@ -317,15 +318,15 @@
       <div class="waitlist-grid">
         <div class="waitlist-text">
           <h2 class="reveal in-view">Put the headset on,<br /><span class="accent-italic">and start cooking.</span></h2>
-          <p class="reveal in-view">No install, no App Lab review. Open a URL on Quest Browser and Ramsey is <em>already floating in your kitchen</em>.</p>
+          <p class="reveal in-view">Start with Google sign-in on desktop. Choose a recipe and pair the installed Quest app. The headset is wireless; your desktop stays on to run the cooking assistant.</p>
           <div class="waitlist-points reveal in-view">
             <div class="point">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
-              <span>Works on AR, VR, <em>or a laptop</em></span>
+              <span>Choose on desktop, <em>cook on Quest</em></span>
             </div>
             <div class="point">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
-              <span>An <em>offline demo dish</em> always works</span>
+              <span>Your own <em>Firebase profile</em> and progress</span>
             </div>
             <div class="point">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"></path></svg>
@@ -352,7 +353,7 @@
                   </button>
                 </div>
               </div>
-              <p class="disclaimer">Or just <a href="/app/?demo=1">open the offline demo</a> — no typing needed.</p>
+              <p class="disclaimer">Or just <a href="/app/?demo=1">try the desktop demo</a> — no typing needed.</p>
             </form>
           </div>
         </div>

@@ -5,6 +5,7 @@ presses stay in sync.
 """
 import re
 import time
+import uuid
 from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Dict, List, Optional
@@ -54,6 +55,17 @@ class KitchenSession:
     def __init__(self, recipe: Recipe):
         self.recipe = recipe
         self.step_index = 0
+        self.revision = 0
+        self.completion_votes = 0
+        self.last_completion_vote = 0.0
+        self.last_frame_hash = None
+        self.completed = False
+        self.points = 0
+        self.monitor_busy = False
+        self.latest_assist = None
+        self.owner_uid = None
+        self.completion_id = uuid.uuid4().hex
+        self.profile_saved = False
         self.servings_multiplier = Fraction(1)
         # Backboard tracks conversation state server-side per thread; we just
         # need to remember which thread belongs to this cook's session.
@@ -77,14 +89,28 @@ class KitchenSession:
 
     # --- navigation -----------------------------------------------------
     def next_step(self) -> str:
+        self._invalidate_observations()
         if self.step_index < len(self.recipe.steps) - 1:
             self.step_index += 1
         return self.current_step()
 
     def back_step(self) -> str:
+        self._invalidate_observations()
         if self.step_index > 0:
             self.step_index -= 1
         return self.current_step()
+
+    def _invalidate_observations(self):
+        self.revision += 1
+        self.completion_votes = 0
+        self.last_frame_hash = None
+        self.latest_assist = None
+
+    def complete(self):
+        if self.step_index == len(self.recipe.steps) - 1 and not self.completed:
+            self.completed = True
+            self.points = 20
+            self._invalidate_observations()
 
     def current_step(self) -> str:
         return self.recipe.steps[self.step_index]
@@ -109,9 +135,11 @@ class KitchenSession:
 
     # --- edits by voice ---------------------------------------------------
     def scale_servings(self, multiplier: float) -> None:
+        self._invalidate_observations()
         self.servings_multiplier = Fraction(multiplier).limit_denominator(8)
 
     def swap_ingredient(self, original: str, replacement: str) -> None:
+        self._invalidate_observations()
         pattern = re.compile(re.escape(original), re.I)
         for i, line in enumerate(self.recipe.ingredients):
             if pattern.search(line):
@@ -120,6 +148,7 @@ class KitchenSession:
 
     # --- timers -------------------------------------------------------------
     def start_timer(self, label: Optional[str] = None, duration_seconds: Optional[int] = None) -> Timer:
+        self._invalidate_observations()
         if duration_seconds is None:
             duration_seconds = detect_duration_seconds(self.current_step()) or 300
         timer = Timer(label=label or f"Step {self.step_index + 1}", duration_seconds=duration_seconds)
@@ -132,6 +161,11 @@ class KitchenSession:
     def to_state_dict(self) -> Dict:
         return {
             "title": self.recipe.title,
+            "revision": self.revision,
+            "completed": self.completed,
+            "points": self.points,
+            "assist": self.latest_assist,
+            "profile_saved": self.profile_saved,
             "step_index": self.step_index,
             "total_steps": len(self.recipe.steps),
             "current_step": self.current_step(),

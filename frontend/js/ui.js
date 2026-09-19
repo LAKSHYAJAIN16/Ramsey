@@ -149,30 +149,10 @@ export function showSafety(command) {
 }
 
 export function renderKitchenState(state) {
-  document.getElementById("step-progress").textContent = `Step ${state.step_index + 1} / ${state.total_steps}`;
-  document.getElementById("step-text").textContent = state.current_step;
-
-  const list = document.getElementById("ingredient-list");
-  list.innerHTML = "";
-  state.ingredients.forEach((ingredient, i) => {
-    const li = document.createElement("li");
-    li.textContent = ingredient;
-    if (state.checked_ingredients.includes(i)) li.classList.add("checked");
-    li.dataset.index = String(i);
-    list.appendChild(li);
-  });
-
-  const note = document.getElementById("servings-note");
-  note.textContent = state.servings_multiplier !== 1 ? `(x${state.servings_multiplier} servings)` : "";
-
-  const timersPanel = document.getElementById("timers-panel");
-  timersPanel.innerHTML = "";
-  state.timers.forEach((timer) => {
-    const chip = document.createElement("div");
-    chip.className = "timer-chip";
-    chip.textContent = `${timer.label}: ${formatSeconds(timer.remaining_seconds)}`;
-    timersPanel.appendChild(chip);
-  });
+  document.getElementById('session-connection').textContent = state.completed ? 'Cooking complete in Quest.' : 'Recipe ready. Your headset will use this desktop session.';
+  document.getElementById('session-points').textContent = state.completed ? `+${state.points} points${state.profile_saved ? ' saved to your profile.' : ' — profile sync pending.'}` : '';
+  document.getElementById('step-progress').textContent = `${state.title} · Step ${state.step_index + 1} of ${state.total_steps}`;
+  document.getElementById('step-text').textContent = state.current_step;
 }
 
 export function formatSeconds(total) {
@@ -222,4 +202,3 @@ export function setSearchStatus(visible, sources = []) {
     list.appendChild(div);
   });
 }
-

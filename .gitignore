@@ -11,3 +11,24 @@ backend/data/
 .test-tmp/
 backend/serviceAccountKey.json
 *serviceAccountKey*.json
+builds/
+
+# Unity regenerates these locally; keep Assets and their .meta files.
+unity-client/[Ll]ibrary/
+unity-client/[Tt]emp/
+unity-client/[Oo]bj/
+unity-client/[Ll]ogs/
+unity-client/[Uu]ser[Ss]ettings/
+unity-client/[Bb]uild/
+unity-client/[Bb]uilds/
+unity-client/[Cc]aptures/
+unity-client/.vs/
+unity-client/*.csproj
+unity-client/*.sln
+*.apk
+*.aab
+*.keystore
+*.jks
+.env.*
+!.env.example
+test-results/

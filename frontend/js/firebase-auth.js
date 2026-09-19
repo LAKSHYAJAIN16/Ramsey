@@ -15,7 +15,12 @@ const auth = getAuth(app);
 
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
+  let result;
+  try { result = await signInWithPopup(auth, provider); }
+  catch (error) {
+    if (error.code === 'auth/unauthorized-domain') throw new Error('This hostname is not authorized in Firebase. Open localhost:8000, or add this hostname under Firebase Authentication → Settings → Authorized domains.');
+    throw error;
+  }
   const idToken = await result.user.getIdToken();
   const response = await fetch("/api/auth/firebase", {
     method: "POST",

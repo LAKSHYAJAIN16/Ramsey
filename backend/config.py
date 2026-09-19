@@ -1,4 +1,5 @@
 import os
+import secrets
 from pathlib import Path
 
 try:
@@ -19,7 +20,7 @@ BACKBOARD_API_KEY = os.environ.get("BACKBOARD_API_KEY", "")
 BACKBOARD_MODEL = os.environ.get("BACKBOARD_MODEL", "")
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
 RAMSEY_PORT = int(os.environ.get("RAMSEY_PORT", "8000"))
-SESSION_SECRET = os.environ.get("SESSION_SECRET", "ramsey-local-development-secret")
+SESSION_SECRET = os.environ.get("SESSION_SECRET") or secrets.token_urlsafe(48)
 FIREBASE_PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "")
 FIREBASE_SERVICE_ACCOUNT_PATH = os.environ.get(
     "FIREBASE_SERVICE_ACCOUNT_PATH", str(BASE_DIR / "backend" / "serviceAccountKey.json")

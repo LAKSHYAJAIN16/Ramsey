@@ -53,11 +53,14 @@ class ProfileStore:
         data = self._doc(uid).get().to_dict()
         return self._serialize(data) if data else None
 
-    def add_completed_meal(self, uid: str, calories: int) -> Optional[Dict]:
+    def add_completed_meal(self, uid: str, calories: int, completion_id: Optional[str] = None) -> Optional[Dict]:
         doc = self._doc(uid)
         existing = doc.get().to_dict()
         if not existing:
             return None
+        completions = existing.get("completed_sessions", [])
+        if completion_id and completion_id in completions:
+            return self._serialize(existing)
         today = datetime.now(timezone.utc).date().isoformat()
         last = existing.get("last_cooked_on")
         if last == today:
@@ -73,6 +76,8 @@ class ProfileStore:
             "last_cooked_on": today,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
+        if completion_id:
+            updates["completed_sessions"] = [*completions, completion_id]
         doc.update(updates)
         existing.update(updates)
         return self._serialize(existing)

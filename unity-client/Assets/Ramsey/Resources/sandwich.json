@@ -1,0 +1,13 @@
+{
+  "title": "Garden sandwich",
+  "source_url": "",
+  "servings": 1,
+  "method": "offline",
+  "ingredients": ["2 slices of bread", "2 slices of cheese", "2 lettuce leaves", "1 sliced tomato", "1 tablespoon of your preferred spread"],
+  "steps": [
+    "Set out your bread, cheese, lettuce, sliced tomato and spread on a clean board.",
+    "Spread a thin layer of your preferred spread onto one side of each bread slice.",
+    "Place the cheese on the bottom slice, then add the lettuce and tomato.",
+    "Place the second slice on top, spread-side down. Your sandwich is ready."
+  ]
+}

@@ -457,6 +457,7 @@ footer { position: relative; overflow: hidden; padding: 40px 1rem 24px; backgrou
 .stagger-4 { transition-delay: .4s; } .stagger-5 { transition-delay: .5s; } .stagger-6 { transition-delay: .6s; }
 
 .spacer-48 { height: 48px; }
+.demo-status { max-width: 38rem; margin: 18px auto; padding: 0 16px; font-size: .875rem; line-height: 1.6; color: var(--text-secondary); }
 .max-w-7xl { max-width: 80rem; margin: 0 auto; }
 .px-section { padding-left: 1rem; padding-right: 1rem; }
 @media (min-width: 640px) { .px-section { padding-left: 1.5rem; padding-right: 1.5rem; } }
