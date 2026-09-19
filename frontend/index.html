@@ -23,6 +23,12 @@
       </header>
       <p class="subtitle">Learn to cook, one real kitchen skill at a time.</p>
 
+      <div class="mode-switch" role="tablist" aria-label="Cooking mode">
+        <button id="mode-campaign" class="mode-button active" type="button" role="tab" aria-selected="true" aria-controls="campaign-mode">Campaign</button>
+        <button id="mode-freestyle" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="freestyle-mode">Freestyle</button>
+      </div>
+
+      <div id="campaign-mode" role="tabpanel">
       <section class="daily-journey" aria-labelledby="daily-menu-title">
         <div class="journey-heading">
           <div><p class="eyebrow">TODAY'S PRACTICE</p><h2 id="daily-menu-title">Your cooking menu</h2></div>
@@ -41,7 +47,12 @@
         <div class="section-heading"><div><p class="eyebrow">EXPANSION PACKS</p><h2 id="chef-pack-title">Cook with a new guide</h2></div><span class="pack-count">5 packs</span></div>
         <div id="chef-pack-list" class="pack-list"></div>
       </section>
+      </div>
 
+      <section id="freestyle-mode" class="freestyle-mode hidden" role="tabpanel" aria-labelledby="mode-freestyle">
+        <p class="eyebrow">FREESTYLE KITCHEN</p>
+        <h2>What do you feel like cooking?</h2>
+        <p class="mode-description">Name any dish and Ramsey will search live sources through Browserbase, then turn the best recipe into a step-by-step kitchen lesson.</p>
       <form id="dish-form">
         <label class="sr-only" for="dish-input">Choose a dish to cook</label>
         <input id="dish-input" type="text" placeholder="Or search any dish..." autocomplete="off" />
@@ -66,6 +77,7 @@
 
       <button id="enter-ar" class="hidden">Enter AR on headset</button>
       <button id="enter-vr" class="hidden">Enter VR</button>
+      </section>
     </section>
 
     <section id="kitchen" class="screen hidden">

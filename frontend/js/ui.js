@@ -3,6 +3,16 @@ export function showScreen(name) {
   document.getElementById("kitchen").classList.toggle("hidden", name !== "kitchen");
 }
 
+export function setCookingMode(mode) {
+  const campaign = mode === "campaign";
+  document.getElementById("campaign-mode").classList.toggle("hidden", !campaign);
+  document.getElementById("freestyle-mode").classList.toggle("hidden", campaign);
+  document.getElementById("mode-campaign").classList.toggle("active", campaign);
+  document.getElementById("mode-freestyle").classList.toggle("active", !campaign);
+  document.getElementById("mode-campaign").setAttribute("aria-selected", String(campaign));
+  document.getElementById("mode-freestyle").setAttribute("aria-selected", String(!campaign));
+}
+
 export function renderRecentDishes(dishes, onPick) {
   const row = document.getElementById("recent-dishes");
   row.innerHTML = "";

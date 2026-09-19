@@ -58,6 +58,11 @@ html, body {
   margin-top: 4px;
 }
 
+.mode-switch { display: inline-flex; background: #e6dfcf; border-radius: 12px; padding: 4px; margin: 18px 0 0; gap: 2px; }
+.mode-button { color: var(--muted); background: transparent; border-radius: 9px; padding: 9px 14px; min-height: 40px; font-size: .78rem; }
+.mode-button.active { color: #fffdf7; background: var(--text); box-shadow: 0 2px 4px rgba(36,48,39,.18); }
+.freestyle-mode { margin-top: 32px; }.freestyle-mode h2 { font-size: clamp(1.7rem, 5vw, 2.4rem); margin-bottom: 8px; }.mode-description { color: var(--muted); max-width: 550px; line-height: 1.5; margin: 0 0 18px; }
+
 .eyebrow { color: var(--herb); font: 700 .7rem/1 Arial, sans-serif; letter-spacing: .13em; margin: 0 0 6px; }
 h2 { font-size: 1.35rem; letter-spacing: -.035em; margin: 0; }
 .streak-stamp, .level-badge { background: var(--text); color: var(--bg); border-radius: 999px; padding: 10px 14px; display: grid; grid-template-columns: auto auto; column-gap: 5px; align-items: center; min-height: 44px; }

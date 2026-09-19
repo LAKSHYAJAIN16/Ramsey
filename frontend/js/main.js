@@ -65,6 +65,8 @@ function setupLauncher() {
     renderPacks();
   });
   renderPacks();
+  document.getElementById("mode-campaign").addEventListener("click", () => ui.setCookingMode("campaign"));
+  document.getElementById("mode-freestyle").addEventListener("click", () => ui.setCookingMode("freestyle"));
 
   document.getElementById("dish-form").addEventListener("submit", (e) => {
     e.preventDefault();
