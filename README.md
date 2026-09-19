@@ -1,118 +1,58 @@
-# Ramsey — AI Cooking Assistant
+﻿# Ramsey
 
-Mixed-reality cooking assistant for the Meta Quest 3S (passthrough, not
-VR — you see your real kitchen with the recipe floating in it). Say or
-type a dish, Ramsey finds a recipe, walks you through it step by step,
-and talks back.
+A mixed-reality cooking companion. Pick a recipe on desktop; bring its steps and a conversational chef into your kitchen on Quest.
 
-Two clients share one FastAPI backend: a native Unity app on the Quest
-3S (spatial anchors, on-headset camera vision) and this repo's website
-(`frontend/`), which is the desktop/laptop companion — recipe search,
-the cooking campaign, chat, voice. The Unity app lives outside this
-repo; see `PLAN.md` for how it talks to the backend.
+**The pitch:** Recipes tell you what to do. Ramsey is designed to help you do it: choose a recipe on your laptop, then use Quest for hands-free instructions and a voice assistant that knows your current step. Camera-based progress checks and timely cooking help are the next experience to validate on hardware.
 
-## What's here vs. what's a stub
+[Judge guide](docs/judging.md) · [Deck](deck.md) · [Blueprint](docs/blueprint.md) · [Build plan](docs/build-plan.md) · [Critique](docs/critique.md)
 
-- **Recipe engine (Tier 1)** — real, tested: JSON-LD recipe parsing,
-  the parallel source race with cancellation, the result cache, and the
-  offline demo recipe are all implemented and covered by tests that run
-  against fakes, no API keys required.
-- **Kitchen view (Tier 2)** — real: step card, ingredient checklist,
-  duration auto-detection + timers, Back/Timer/Next, recent recipes,
-  `?q=`/`?demo=1` links. Desktop/laptop browser only — the headset
-  experience is the separate Unity app now, not this page.
-- **Chef (Tier 3)** — real, against documented (not guessed) API shapes
-  for both Browserbase Fetch and Backboard's thread/run/tool-call flow —
-  see "API shapes used" below for what's confirmed by docs vs. what's
-  still only a good guess. None of it has run against a live key yet.
+## What is in this repo
 
-## Setup
+| Path | What |
+| --- | --- |
+| [backend](backend/README.md) | Python API, identity, pairing, cooking sessions and profiles |
+| [backend/recipe_engine](backend/recipe_engine/README.md) | Search, raw-content parsing, ordered recipe steps and cache |
+| [backend/chef](backend/chef/README.md) | Conversation, timers, visual assistance and progression rules |
+| [backend/tests](backend/tests/README.md) | Offline evidence: 78 passing local tests |
+| [unity-client](unity-client/README.md) | Complete Unity 6 Quest project: Assets, Packages, ProjectSettings |
+| [frontend](frontend/README.md) | Signed-in desktop recipe/session companion |
+| [homepage](homepage/README.md) | Project introduction and entry point |
+| [data](data/README.md) | Bundled development recipe |
+| [docs](docs/README.md) | Judge guide, blueprint, team plan, build plan and critique |
+| [scripts](scripts/README.md) | Portable Unity project checks |
+| [.github](.github/README.md) | Backend tests and source validation in GitHub Actions |
 
-```bash
+## Two ideas hold it together
+
+**One cooking session.** Desktop selects the recipe, Python owns the steps and logic, and Quest presents guidance in passthrough. Recipe selection, voice questions, timers, and observations should refer to that same session.
+
+**Help belongs beside the task.** The intended assistant knows the current step and the equipment around you. Spatial guidance, spoken help, and visual feedback should reduce the need to stop cooking and consult a screen. Unknown observations are not proof that a step is done.
+
+## Run it
+
+```powershell
 python -m venv .venv
-./.venv/Scripts/activate        # or: source .venv/bin/activate on macOS/Linux
-pip install -r backend/requirements.txt
-cp .env.example .env             # fill in BROWSERBASE_* / BACKBOARD_* keys
+.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+Copy-Item .env.example .env             # fill in provider/auth configuration
+.venv\Scripts\python.exe -m uvicorn backend.app:app --reload --port 8000
 ```
 
-Run the tests (no keys needed — everything hits fakes):
+Open [the homepage](http://localhost:8000) or [the desktop companion](http://localhost:8000/app/). Provider-backed features require configured services; an offline recipe is included for development.
 
-```bash
-pytest backend/tests -q
+```powershell
+.venv\Scripts\python.exe -m pytest backend/tests -q
 ```
 
-Run the server:
+Useful: [Quest build and controls](unity-client/README.md), [backend setup and API notes](SETUP_NOTES.md), [roadmap](TODO.md). Add `unity-client/` directly in Unity Hub; the complete source project is included. Online Quest features need a reachable backend even when the headset is untethered.
 
-```bash
-uvicorn backend.app:app --reload --port 8000
-```
+## Honest labels
 
-Open `http://localhost:8000` for the marketing homepage, or go straight
-to `http://localhost:8000/app/` for the laptop view — `?demo=1` skips to
-the offline demo recipe, `?q=shakshuka` searches on load.
+**Implemented in the repository:** recipe parsing/search and session logic, desktop UI and homepage, identity/profile and pairing routes, chef/vision integration code, step/plating assistance, and Unity client source. This is a code inventory, not a claim of complete live operation.
 
-The Quest 3S experience is the separate Unity app (not this website) -
-it talks to this same backend over `/api/*`, including the
-`/api/vision/*` and `/api/kitchen/spots` endpoints built for it.
+**Verified locally on September 19, 2026:** 78 backend tests pass; Unity project structure, asset metadata and scene references pass; browser JavaScript syntax passes. Provider responses are faked in automated tests. Earlier Unity compilation notes refer to the previous client, not a new build of this imported project.
 
-## Project layout
+**Not verified end to end:** headset pairing, passthrough, voice, camera, spatial anchors, and the complete cooking loop. The last recorded APK build failed from insufficient disk space; earlier live AI tests encountered provider billing restrictions.
 
-```
-backend/
-  app.py                FastAPI app: recipe, session, chat, chat/voice, fridge,
-                         vision (identify-spot/check-doneness), kitchen-spots
-  recipe_engine/         search -> race -> parse -> cache -> demo fallback
-  chef/                  KitchenSession, memory, tool-call loop, Backboard client,
-                         vision.py (photo -> spot ID / doneness, for the Unity client),
-                         kitchen_spots.py (labeled spatial anchors, from Unity)
-  tests/                 pytest suite + fakes shaped like the real SDKs
-frontend/                the desktop/laptop companion, served at /app/
-  index.html             single page: campaign/freestyle/masterchef modes, kitchen view
-  js/                     api client, state, ui rendering, voice recorder, firebase auth
-homepage/                marketing landing page, served at /
-  index.html             hero, how-it-works, stack, FAQ, CTA - links into /app/
-data/demo_recipe.json    the recipe that always works, even offline
-PLAN.md                  the Unity-pivot plan: what moved where and why
-```
+**Product goals requiring further integration/validation:** continuous monitoring, equipment tracking, double-table-tap assistant activation, evidence-based automatic progression, and polished on-headset plating guidance. No certified hazard detection or automatic emergency calling is claimed.
 
-## API shapes used
-
-Confirmed against current docs (Sept 2026), not guessed:
-
-- **Browserbase Fetch** — `POST https://api.browserbase.com/v1/fetch`,
-  header `X-BB-API-Key`, body `{"url", "format": "raw"|"markdown"|"json"}`,
-  response has the page HTML in `content`. `format="raw"` (the default)
-  is confirmed to return real page HTML — resolves known-unknown #1.
-  [docs.browserbase.com/platform/fetch/overview](https://docs.browserbase.com/platform/fetch/overview)
-- **Stagehand Model Gateway** — `AsyncStagehand(browserbase_api_key=...)`
-  needs no separate model-provider key; Model Gateway routes model calls
-  through the one Browserbase key. Resolves known-unknown #2.
-  [browserbase.com/blog/model-gateway](https://www.browserbase.com/blog/model-gateway),
-  [docs.stagehand.dev/v3/sdk/python](https://docs.stagehand.dev/v3/sdk/python)
-- **Backboard** — `https://app.backboard.io/api`, header `X-API-Key`,
-  `POST /threads/messages` to talk, `POST /threads/tool-outputs` to
-  answer a tool call. It's an Assistants-style thread/run API: a turn
-  either `COMPLETED`s with text or comes back `REQUIRES_ACTION` with
-  `tool_calls` to run locally — `chef/brain.py`'s loop is built around
-  that, not a client-side chat-completions messages list.
-  [docs.backboard.io](https://docs.backboard.io/),
-  tool-calls format confirmed at docs.backboard.io/sdk/tool-calls
-
-Still open — verify before the demo (Tier 0):
-
-- Whether it's `client.sessions.start(...)` or `.create(...)` on the
-  Stagehand session — doc mirrors disagreed; `browserbase_client.py`
-  uses `.start`.
-- Backboard's voice STT/TTS provider/model naming (`app.py`'s
-  `/api/chat/voice` guesses `{"provider": "elevenlabs"}` for both).
-- The Browserbase live-view iframe being embeddable on the launcher page
-  (not wired up in the frontend yet — Tier 1 nice-to-have).
-
-Spatial anchors, on-headset camera vision, and mic access on the Quest
-moved to the Unity app and are tracked there now, not in this repo -
-see `PLAN.md`.
-
-## Persona
-
-Blunt but encouraging. Never clones or imitates the real Gordon Ramsay's
-voice or likeness — enforced in the system prompt in `backend/chef/brain.py`.
+Sources and credits: [SOURCES.md](SOURCES.md). Development record: [CODEX_LOG.md](CODEX_LOG.md).
