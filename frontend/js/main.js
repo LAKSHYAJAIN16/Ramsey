@@ -1,14 +1,15 @@
 import * as api from "./api.js";
 import * as ui from "./ui.js";
-import { getSessionId, getQueryParams, getRecentDishes, pushRecentDish } from "./state.js";
+import { CHEF_PACKS, DAILY_MENUS, getProgress, getQueryParams, getRecentDishes, getSessionId, logHealthyMeal, pushRecentDish, selectChefPack } from "./state.js";
 import { VoiceRecorder } from "./voice.js";
 import { XRHost, bindKeyboardFallback } from "./xr.js";
 
 const sessionId = getSessionId();
 const xrHost = new XRHost();
 const localMemory = { allergies: [], dislikes: [] };
+let mealToLog = null;
 
-async function loadRecipe(dish, demo = false) {
+async function loadRecipe(dish, demo = false, dailyMenu = null) {
   ui.setSearchStatus(true, demo ? ["Loading offline demo recipe..."] : [
     "Racing: fast fetch + parse",
     "Racing: live browser fallback",
@@ -21,6 +22,8 @@ async function loadRecipe(dish, demo = false) {
     ui.showScreen("kitchen");
     const state = await api.getSessionState(sessionId);
     ui.renderKitchenState(state);
+    mealToLog = dailyMenu || { dish: recipe.title, calories: 450 };
+    ui.setMealToLog(mealToLog.dish, mealToLog.calories);
     ui.appendChatLine("ramsey", `Right, ${recipe.title}. Let's get moving.`);
   } catch (err) {
     ui.setSearchStatus(false);
@@ -55,6 +58,13 @@ function trackMemoryFromToolCalls(toolCalls) {
 
 function setupLauncher() {
   ui.renderRecentDishes(getRecentDishes(), (dish) => loadRecipe(dish));
+  ui.renderProgress(getProgress());
+  ui.renderDailyMenu(DAILY_MENUS, (menu) => loadRecipe(menu.dish, false, menu));
+  const renderPacks = () => ui.renderChefPacks(CHEF_PACKS, getProgress().chefPack, (pack) => {
+    selectChefPack(pack.id);
+    renderPacks();
+  });
+  renderPacks();
 
   document.getElementById("dish-form").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -107,6 +117,17 @@ function setupKitchenControls() {
   document.getElementById("btn-next").addEventListener("click", () => applyAction("next"));
   document.getElementById("btn-timer").addEventListener("click", () => applyAction("start_timer"));
   document.getElementById("btn-exit").addEventListener("click", () => ui.showScreen("launcher"));
+  document.getElementById("btn-log-meal").addEventListener("click", () => {
+    if (!mealToLog) return;
+    const result = logHealthyMeal(mealToLog.dish, mealToLog.calories);
+    ui.renderProgress(result.progress);
+    if (result.duplicate) {
+      ui.appendChatLine("ramsey", "That dish is already in today's log. Consistency beats double-counting.");
+    } else {
+      ui.appendChatLine("ramsey", `Lesson complete: ${mealToLog.calories} kcal and 20 XP. That's day ${result.progress.streak} of your streak.`);
+      document.getElementById("btn-log-meal").disabled = true;
+    }
+  });
 
   document.getElementById("ingredient-list").addEventListener("click", (e) => {
     const li = e.target.closest("li");

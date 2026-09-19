@@ -14,6 +14,49 @@ export function renderRecentDishes(dishes, onPick) {
   });
 }
 
+export function renderProgress(progress) {
+  document.getElementById("streak-count").textContent = progress.streak;
+  document.getElementById("calorie-count").textContent = progress.calories.toLocaleString();
+  document.getElementById("meal-count").textContent = `${progress.meals} meal${progress.meals === 1 ? "" : "s"} cooked`;
+  document.getElementById("level-number").textContent = Math.floor(progress.xp / 100) + 1;
+  document.getElementById("xp-fill").style.width = `${progress.xp % 100}%`;
+  document.getElementById("daily-menu-note").textContent = progress.meals
+    ? `${progress.meals} dish${progress.meals === 1 ? "" : "es"} cooked today. Keep building your skills.`
+    : "Pick a dish and learn it step by step.";
+}
+
+export function renderDailyMenu(menus, onPick) {
+  const root = document.getElementById("daily-menu");
+  root.innerHTML = "";
+  menus.forEach((menu) => {
+    const button = document.createElement("button");
+    button.className = "menu-card";
+    button.type = "button";
+    button.innerHTML = `<span class="menu-emoji" aria-hidden="true">${menu.emoji}</span><span class="menu-main"><strong>${menu.dish}</strong><small>${menu.detail}</small></span><span class="menu-meta"><b>${menu.calories}</b><small>kcal</small><em>${menu.tag}</em></span>`;
+    button.addEventListener("click", () => onPick(menu));
+    root.appendChild(button);
+  });
+}
+
+export function renderChefPacks(packs, selectedId, onPick) {
+  const root = document.getElementById("chef-pack-list");
+  root.innerHTML = "";
+  packs.forEach((pack) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `chef-pack ${pack.accent}${pack.id === selectedId ? " selected" : ""}`;
+    button.setAttribute("aria-pressed", String(pack.id === selectedId));
+    button.innerHTML = `<span class="chef-mark">${pack.mark}</span><span><strong>${pack.name}</strong><small>${pack.focus}</small></span><i>${pack.id === selectedId ? "Active" : "Choose"}</i>`;
+    button.addEventListener("click", () => onPick(pack));
+    root.appendChild(button);
+  });
+}
+
+export function setMealToLog(dish, calories) {
+  document.getElementById("meal-calorie-label").textContent = `${dish} · about ${calories} kcal`;
+  document.getElementById("btn-log-meal").disabled = false;
+}
+
 export function renderKitchenState(state) {
   document.getElementById("step-progress").textContent = `Step ${state.step_index + 1} / ${state.total_steps}`;
   document.getElementById("step-text").textContent = state.current_step;

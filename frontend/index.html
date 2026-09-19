@@ -12,12 +12,40 @@
        camera feed; on a laptop it's just a normal page. -->
   <div id="overlay">
     <section id="launcher" class="screen">
-      <h1>Ramsey</h1>
-      <p class="subtitle">Say or type a dish. He'll go find it.</p>
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">YOUR KITCHEN PASSPORT</p>
+          <h1>Ramsey</h1>
+        </div>
+        <button id="profile-streak" class="streak-stamp" type="button" aria-label="Current healthy cooking streak">
+          <span aria-hidden="true">&#128293;</span><strong id="streak-count">0</strong><small>day streak</small>
+        </button>
+      </header>
+      <p class="subtitle">Learn to cook, one real kitchen skill at a time.</p>
+
+      <section class="daily-journey" aria-labelledby="daily-menu-title">
+        <div class="journey-heading">
+          <div><p class="eyebrow">TODAY'S PRACTICE</p><h2 id="daily-menu-title">Your cooking menu</h2></div>
+          <div class="level-badge"><span id="level-number">1</span><small>level</small></div>
+        </div>
+        <p id="daily-menu-note" class="menu-note">Pick a dish and learn it step by step.</p>
+        <div id="daily-menu" class="daily-menu" aria-live="polite"></div>
+      </section>
+
+      <section class="ledger" aria-label="Today's nutrition progress">
+        <div class="calorie-orbit"><strong id="calorie-count">0</strong><span>kcal logged</span></div>
+        <div class="ledger-copy"><p class="eyebrow">COOKING PROGRESS</p><strong id="meal-count">0 meals cooked</strong><p>Every completed dish earns 20 XP and grows your cooking level.</p><div class="xp-track" aria-label="Progress to next level"><span id="xp-fill"></span></div></div>
+      </section>
+
+      <section class="chef-packs" aria-labelledby="chef-pack-title">
+        <div class="section-heading"><div><p class="eyebrow">EXPANSION PACKS</p><h2 id="chef-pack-title">Cook with a new guide</h2></div><span class="pack-count">5 packs</span></div>
+        <div id="chef-pack-list" class="pack-list"></div>
+      </section>
 
       <form id="dish-form">
-        <input id="dish-input" type="text" placeholder="e.g. shakshuka" autocomplete="off" />
-        <button type="submit">Cook it</button>
+        <label class="sr-only" for="dish-input">Choose a dish to cook</label>
+        <input id="dish-input" type="text" placeholder="Or search any dish..." autocomplete="off" />
+        <button type="submit">Find a recipe</button>
       </form>
 
       <div id="recent-dishes" class="chip-row"></div>
@@ -44,6 +72,11 @@
       <div class="panel step-card">
         <div class="step-progress" id="step-progress">Step 1 / 1</div>
         <p id="step-text">...</p>
+      </div>
+
+      <div class="panel meal-log-panel">
+        <div><p class="eyebrow">FINISH THE LESSON</p><strong id="meal-calorie-label">Estimate calories after choosing a daily menu.</strong></div>
+        <button id="btn-log-meal" type="button">I cooked this</button>
       </div>
 
       <div class="panel timers" id="timers-panel"></div>
