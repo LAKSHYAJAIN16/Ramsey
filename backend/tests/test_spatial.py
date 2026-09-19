@@ -25,3 +25,13 @@ def test_malformed_or_excess_detections():
     assert parse_equipment({'label': 'bowl'}) == []
     assert len(parse_equipment([None, box(), 'bad'])) == 1
     assert len(parse_equipment([box()] * 30)) == 12
+
+
+async def test_assistance_returns_boxes_without_requiring_them():
+    from backend.tests.test_step_assist import Camera, session
+    from backend.chef.step_assist import assess_frame
+    result = await assess_frame(Camera(equipment=[box(), {'bad': 'box'}]), session(), b'frame', 'f.jpg')
+    assert len(result['equipment']) == 1
+    assert not result['advanced']
+    legacy = await assess_frame(Camera(), session(), b'other', 'f.jpg')
+    assert legacy['equipment'] == []

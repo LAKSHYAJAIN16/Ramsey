@@ -14,11 +14,14 @@ namespace Ramsey
             public TextMesh text;
         }
         readonly List<Track> tracks = new List<Track>();
+        RamseyDepthSnapshot lastFrame;
         public Transform viewer;
         public string Status { get; private set; } = "Waiting for equipment";
 
         public void Observe(EquipmentDetection[] detections, RamseyDepthSnapshot frame)
         {
+            if (ReferenceEquals(lastFrame, frame)) return;
+            lastFrame = frame;
             if (frame == null || Time.unscaledTime - frame.capturedAt > 15)
             { Status = "Spatial result expired; waiting for a fresh view"; return; }
             if (frame.samples.Count == 0) { Clear(); Status = frame.status; return; }
@@ -85,6 +88,7 @@ namespace Ramsey
         {
             foreach (var track in tracks) if (track.text) Destroy(track.text.gameObject);
             tracks.Clear();
+            lastFrame = null;
         }
         void OnDisable() { Clear(); }
     }
