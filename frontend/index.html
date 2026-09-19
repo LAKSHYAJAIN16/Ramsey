@@ -20,6 +20,7 @@
         <button id="profile-streak" class="streak-stamp" type="button" aria-label="Current healthy cooking streak">
           <span aria-hidden="true">&#128293;</span><strong id="streak-count">0</strong><small>day streak</small>
         </button>
+        <div class="account-summary"><span id="rank-label">Guest · Prep Cook</span><button id="auth-button" class="auth-button" type="button">Sign in to save</button></div>
       </header>
       <p class="subtitle">Learn to cook, one real kitchen skill at a time.</p>
 
@@ -27,7 +28,6 @@
         <button id="mode-campaign" class="mode-button active" type="button" role="tab" aria-selected="true" aria-controls="campaign-mode">Campaign</button>
         <button id="mode-freestyle" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="freestyle-mode">Freestyle</button>
         <button id="mode-masterchef" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="masterchef-mode">MasterChef</button>
-        <button id="mode-tutorial" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="tutorial-mode">Tutorial</button>
       </div>
 
       <div id="campaign-mode" role="tabpanel">
@@ -48,6 +48,14 @@
       <section class="chef-packs" aria-labelledby="chef-pack-title">
         <div class="section-heading"><div><p class="eyebrow">EXPANSION PACKS</p><h2 id="chef-pack-title">Cook with a new guide</h2></div><span class="pack-count">5 packs</span></div>
         <div id="chef-pack-list" class="pack-list"></div>
+      </section>
+
+      <section class="week-one" aria-labelledby="week-one-title">
+        <p class="eyebrow">CAMPAIGN · WEEK 1</p>
+        <h2 id="week-one-title">Kitchen foundations</h2>
+        <p class="mode-description">Build the habits that make every recipe easier before moving on to full dishes.</p>
+        <div id="tutorial-list" class="tutorial-list" aria-label="Week one cooking lessons"></div>
+        <article id="tutorial-detail" class="tutorial-detail" aria-live="polite"></article>
       </section>
       </div>
 
@@ -88,13 +96,6 @@
         <div id="masterchef-challenges" class="challenge-list" aria-live="polite"></div>
       </section>
 
-      <section id="tutorial-mode" class="tutorial-mode hidden" role="tabpanel" aria-labelledby="mode-tutorial">
-        <p class="eyebrow">FOUNDATIONS</p>
-        <h2>Build your kitchen instincts</h2>
-        <p class="mode-description">Short, practical lessons for the moves every cook uses. Learn the why, then try it at your own counter.</p>
-        <div id="tutorial-list" class="tutorial-list" aria-label="Cooking tutorials"></div>
-        <article id="tutorial-detail" class="tutorial-detail" aria-live="polite"></article>
-      </section>
     </section>
 
     <section id="kitchen" class="screen hidden">
@@ -132,6 +133,11 @@
       <button id="btn-exit" class="link-button">Exit / new dish</button>
     </section>
   </div>
+
+  <dialog id="safety-dialog" class="safety-dialog" aria-labelledby="safety-title">
+    <div id="safety-content"></div>
+    <button id="btn-close-safety" class="link-button" type="button">Back to cooking</button>
+  </dialog>
 
   <!-- three.js scene canvas sits behind the overlay for the passthrough /
        VR background; hidden entirely on the plain laptop fallback. -->

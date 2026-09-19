@@ -112,6 +112,7 @@ nav.site-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; transi
 @media (min-width: 768px) { .nav-logo span { font-size: 22px; } }
 
 .nav-actions { display: flex; align-items: center; gap: 12px; }
+.site-rank { color: var(--text-secondary); font-family: var(--font-geist-mono); font-size: .68rem; }.site-auth { color: var(--text-primary); border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px; cursor: pointer; font-size: .76rem; font-weight: 600; }.site-auth:disabled { cursor: default; opacity: .62; }
 
 .glass-btn {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -222,6 +223,8 @@ nav.site-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; transi
 
 .hero-link { font-size: 0.875rem; color: var(--text-secondary); text-decoration: none; }
 .hero-link:hover { text-decoration: underline; }
+
+.mode-launcher { padding: 88px 0; background: var(--surface); }.mode-launcher h2 { margin: 8px 0 14px; font-family: var(--font-raleway); font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -.05em; }.mode-launcher > .max-w-7xl > p:not(.launcher-eyebrow) { color: var(--text-secondary); max-width: 52ch; line-height: 1.55; }.launcher-eyebrow { color: var(--accent); font: 700 .72rem var(--font-geist-mono); letter-spacing: .11em; }.launcher-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 28px; }.launcher-card { min-height: 190px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: white; transition: transform .18s ease, border-color .18s ease; }.launcher-card:hover { transform: translateY(-3px); border-color: var(--accent); }.launcher-card > span { color: var(--accent); font: 700 .72rem var(--font-geist-mono); }.launcher-card h3 { margin: 28px 0 8px; font-family: var(--font-raleway); font-size: 1.2rem; }.launcher-card p { color: var(--text-secondary); font-size: .88rem; line-height: 1.45; }@media (max-width: 700px) { .site-rank { display: none; }.launcher-grid { grid-template-columns: 1fr; }.mode-launcher { padding: 64px 0; } }
 
 /* hero visual (CSS mockup, no external images) */
 .hero-visual-wrap { width: 100%; position: relative; padding: 0 0.75rem; max-width: 1200px; margin: clamp(-72px, -7vw, -36px) auto 0; padding-bottom: clamp(8px, 2vw, 24px); }

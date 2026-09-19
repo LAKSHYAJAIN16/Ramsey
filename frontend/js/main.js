@@ -60,6 +60,8 @@ function trackMemoryFromToolCalls(toolCalls) {
 function setupLauncher() {
   ui.renderRecentDishes(getRecentDishes(), (dish) => loadRecipe(dish));
   ui.renderProgress(getProgress());
+  api.getMe().then(ui.renderAccount).catch(() => ui.renderAccount({ authenticated: false, oauth_ready: false }));
+  document.getElementById("auth-button").addEventListener("click", () => { window.location.href = "/api/auth/google/login"; });
   ui.renderDailyMenu(DAILY_MENUS, (menu) => loadRecipe(menu.dish, false, menu));
   ui.renderMasterChefChallenges(MASTERCHEF_CHALLENGES, (challenge) => loadRecipe(challenge.dish));
   const showTutorial = (tutorial) => {
@@ -76,7 +78,6 @@ function setupLauncher() {
   document.getElementById("mode-campaign").addEventListener("click", () => ui.setCookingMode("campaign"));
   document.getElementById("mode-freestyle").addEventListener("click", () => ui.setCookingMode("freestyle"));
   document.getElementById("mode-masterchef").addEventListener("click", () => ui.setCookingMode("masterchef"));
-  document.getElementById("mode-tutorial").addEventListener("click", () => ui.setCookingMode("tutorial"));
 
   document.getElementById("dish-form").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -138,8 +139,10 @@ function setupKitchenControls() {
     } else {
       ui.appendChatLine("ramsey", `Lesson complete: ${mealToLog.calories} kcal and 20 XP. That's day ${result.progress.streak} of your streak.`);
       document.getElementById("btn-log-meal").disabled = true;
+      api.saveCompletedMeal(mealToLog.calories).then((profile) => ui.renderAccount({ authenticated: true, profile })).catch(() => {});
     }
   });
+  document.getElementById("btn-close-safety").addEventListener("click", () => document.getElementById("safety-dialog").close());
 
   document.getElementById("ingredient-list").addEventListener("click", (e) => {
     const li = e.target.closest("li");
@@ -195,7 +198,8 @@ function main() {
   setupKitchenControls();
   setupVoice();
 
-  const { dish, demo } = getQueryParams();
+  const { dish, demo, mode } = getQueryParams();
+  if (["campaign", "freestyle", "masterchef"].includes(mode)) ui.setCookingMode(mode);
   if (dish || demo) loadRecipe(dish, demo);
 }
 

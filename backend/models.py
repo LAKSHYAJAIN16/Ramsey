@@ -26,3 +26,11 @@ class ChatReply(BaseModel):
 class FridgeSuggestions(BaseModel):
     ingredients: List[str] = []
     suggestions: List[str] = []
+
+
+class ProgressUpdate(BaseModel):
+    calories: int = 0
+
+
+class SafetyCommand(BaseModel):
+    phrase: str

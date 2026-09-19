@@ -44,7 +44,7 @@ export function getSessionId() {
 
 export function getQueryParams() {
   const params = new URLSearchParams(window.location.search);
-  return { dish: params.get("q"), demo: params.get("demo") === "1" };
+  return { dish: params.get("q"), demo: params.get("demo") === "1", mode: params.get("mode") };
 }
 
 export function getRecentDishes() {

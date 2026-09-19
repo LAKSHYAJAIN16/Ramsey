@@ -72,6 +72,22 @@ function handleDishSubmit(form, inputId) {
 handleDishSubmit(document.getElementById('heroForm'), 'heroDish');
 handleDishSubmit(document.getElementById('ctaForm'), 'ctaDish');
 
+// Account state belongs to the website launcher; the WebXR app consumes the
+// same backend profile once the cook enters a mode.
+const siteAuth = document.getElementById('site-auth');
+const siteRank = document.getElementById('site-rank');
+fetch('/api/me').then((response) => response.json()).then((account) => {
+  if (account.authenticated) {
+    siteRank.textContent = `${account.profile.display_name} · ${account.profile.rank}`;
+    siteAuth.textContent = 'Profile saved';
+    siteAuth.disabled = true;
+  } else if (!account.oauth_ready) {
+    siteAuth.textContent = 'Sign-in unavailable';
+    siteAuth.disabled = true;
+  }
+}).catch(() => { siteAuth.disabled = true; siteAuth.textContent = 'Sign-in unavailable'; });
+if (siteAuth) siteAuth.addEventListener('click', () => { window.location.href = '/api/auth/google/login'; });
+
 // Share button
 const shareBtn = document.getElementById('shareBtn');
 if (shareBtn) {

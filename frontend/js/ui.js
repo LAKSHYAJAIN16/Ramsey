@@ -4,7 +4,7 @@ export function showScreen(name) {
 }
 
 export function setCookingMode(mode) {
-  ["campaign", "freestyle", "masterchef", "tutorial"].forEach((name) => {
+  ["campaign", "freestyle", "masterchef"].forEach((name) => {
     const active = mode === name;
     document.getElementById(`${name}-mode`).classList.toggle("hidden", !active);
     document.getElementById(`mode-${name}`).classList.toggle("active", active);
@@ -66,6 +66,20 @@ export function renderProgress(progress) {
     : "Pick a dish and learn it step by step.";
 }
 
+export function renderAccount(account) {
+  const label = document.getElementById("rank-label");
+  const button = document.getElementById("auth-button");
+  if (account.authenticated) {
+    label.textContent = `${account.profile.display_name} · ${account.profile.rank}`;
+    button.textContent = "Profile saved";
+    button.disabled = true;
+  } else {
+    label.textContent = "Guest · Prep Cook";
+    button.textContent = account.oauth_ready ? "Sign in to save" : "Google sign-in unavailable";
+    button.disabled = !account.oauth_ready;
+  }
+}
+
 export function renderDailyMenu(menus, onPick) {
   const root = document.getElementById("daily-menu");
   root.innerHTML = "";
@@ -96,6 +110,17 @@ export function renderChefPacks(packs, selectedId, onPick) {
 export function setMealToLog(dish, calories) {
   document.getElementById("meal-calorie-label").textContent = `${dish} · about ${calories} kcal`;
   document.getElementById("btn-log-meal").disabled = false;
+}
+
+export function showSafety(command) {
+  const dialog = document.getElementById("safety-dialog");
+  const content = document.getElementById("safety-content");
+  if (command === "code_red") {
+    content.innerHTML = `<p class="eyebrow">CODE RED</p><h2 id="safety-title">Stop cooking. Check for immediate danger.</h2><p>Move away from smoke, flame, or a gas smell. If anyone is in danger, call emergency services now.</p><a class="emergency-call" href="tel:911">Call 911</a><p class="safety-note">This action is intentionally manual. Ramsey will not place emergency calls automatically.</p>`;
+  } else {
+    content.innerHTML = `<p class="eyebrow">CODE YELLOW · FIRST AID</p><h2 id="safety-title">Pause. Treat the injury.</h2><section class="first-aid-card"><strong>Burn or scald</strong><p>Move away from heat. Cool under cool or lukewarm running water for 20 minutes. Do not use ice, butter, toothpaste, or creams; remove jewellery or loose clothing only if it is not stuck to skin.</p></section><section class="first-aid-card"><strong>Cut or chopped finger</strong><p>Use a clean cloth or dressing and apply firm, direct pressure. Once bleeding is controlled, rinse a small wound with clean water and cover it with a sterile dressing.</p></section><section class="first-aid-card"><strong>Get urgent help now</strong><p>Call 911 for uncontrolled or spurting bleeding, a deep/gaping wound, loss of feeling or movement, a serious/chemical burn, trouble breathing, choking, or loss of consciousness.</p></section><p class="safety-note">This is immediate guidance, not a substitute for professional medical care.</p>`;
+  }
+  if (!dialog.open) dialog.showModal();
 }
 
 export function renderKitchenState(state) {

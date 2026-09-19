@@ -30,6 +30,32 @@ export async function sendChat(sessionId, text) {
   return res.json();
 }
 
+export async function sendSafetyCommand(phrase) {
+  const res = await fetch(`${API_BASE}/api/safety/command`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phrase }),
+  });
+  if (!res.ok) throw new Error(`safety command failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getMe() {
+  const res = await fetch(`${API_BASE}/api/me`);
+  if (!res.ok) throw new Error(`profile fetch failed: ${res.status}`);
+  return res.json();
+}
+
+export async function saveCompletedMeal(calories) {
+  const res = await fetch(`${API_BASE}/api/me/progress`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ calories }),
+  });
+  if (!res.ok) throw new Error(`profile progress save failed: ${res.status}`);
+  return res.json();
+}
+
 export async function analyzeFridgePhoto(photoFile) {
   const form = new FormData();
   form.append("photo", photoFile);
