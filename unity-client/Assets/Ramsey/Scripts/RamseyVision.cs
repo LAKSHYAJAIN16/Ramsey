@@ -8,9 +8,13 @@ namespace Ramsey
     public class RamseyVision : MonoBehaviour
     {
         PassthroughCameraAccess cameraAccess;
+        EnvironmentRaycastManager depth;
+        bool ownsDepth;
+        public RamseyDepthSnapshot LastDepth { get; private set; }
         const string Permission = "horizonos.permission.HEADSET_CAMERA";
         public IEnumerator Capture(Action<byte[]> completed, Action<string> notice)
         {
+            LastDepth = null;
             if (Application.isEditor) { notice("Camera capture needs an installed Quest build. No image was uploaded."); yield break; }
 #if UNITY_ANDROID
             if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(Permission))
@@ -28,12 +32,19 @@ namespace Ramsey
                 cameraAccess.RequestedResolution = new Vector2Int(1280, 960); go.SetActive(true);
             }
             cameraAccess.enabled = true; notice("Opening camera…");
+            if (!depth && EnvironmentRaycastManager.IsSupported)
+            {
+                depth = FindAnyObjectByType<EnvironmentRaycastManager>();
+                if (!depth) { depth = gameObject.AddComponent<EnvironmentRaycastManager>(); ownsDepth = true; }
+            }
+            if (depth && ownsDepth) depth.enabled = true;
             float deadline = Time.realtimeSinceStartup + 12;
             while ((!cameraAccess.IsPlaying || !cameraAccess.IsUpdatedThisFrame) && Time.realtimeSinceStartup < deadline) yield return null;
-            if (!cameraAccess.IsPlaying) { cameraAccess.enabled = false; notice("Camera did not start. Check app permissions and try again."); yield break; }
+            if (!cameraAccess.IsPlaying || !cameraAccess.IsUpdatedThisFrame) { cameraAccess.enabled = false; notice("No fresh camera frame. Check app permissions and try again."); yield break; }
             yield return new WaitForEndOfFrame();
             var source = cameraAccess.GetTexture();
             if (!source) { cameraAccess.enabled = false; notice("Camera returned no image. Try again."); yield break; }
+            LastDepth = RamseyDepthSnapshot.Capture(cameraAccess, depth);
             int width = 768, height = Mathf.RoundToInt(768f * source.height / source.width);
             var target = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGB32);
             var previous = RenderTexture.active;
@@ -43,5 +54,7 @@ namespace Ramsey
             finally { RenderTexture.active = previous; RenderTexture.ReleaseTemporary(target); Destroy(readable); cameraAccess.enabled = false; }
             completed(bytes);
         }
+        public void StopSpatialCapture() { if (ownsDepth && depth) depth.enabled = false; LastDepth = null; }
+        void OnDisable() { StopSpatialCapture(); if (cameraAccess) cameraAccess.enabled = false; }
     }
 }

@@ -14,5 +14,6 @@ namespace Ramsey
     [Serializable] public class PairRequest { public string code; }
     [Serializable] public class PairResponse { public string session_id, token; public KitchenState state; }
     [Serializable] public class AssistObservation { public string hazard; public string[] plating_tips; }
-    [Serializable] public class AssistResponse { public string message, audio_url; public bool advanced; public KitchenState state; public AssistObservation observation; }
+    [Serializable] public class EquipmentDetection { public string label; public float confidence, x, y, width, height; }
+    [Serializable] public class AssistResponse { public string message, audio_url; public bool advanced; public KitchenState state; public AssistObservation observation; public EquipmentDetection[] equipment; }
 }
