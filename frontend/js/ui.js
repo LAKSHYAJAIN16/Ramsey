@@ -61,6 +61,8 @@ export function renderProgress(progress) {
   document.getElementById("meal-count").textContent = `${progress.meals} meal${progress.meals === 1 ? "" : "s"} cooked`;
   document.getElementById("level-number").textContent = Math.floor(progress.xp / 100) + 1;
   document.getElementById("xp-fill").style.width = `${progress.xp % 100}%`;
+  document.getElementById("campaign-streak").textContent = progress.streak;
+  document.getElementById("campaign-xp").textContent = progress.xp;
   document.getElementById("daily-menu-note").textContent = progress.meals
     ? `${progress.meals} dish${progress.meals === 1 ? "" : "es"} cooked today. Keep building your skills.`
     : "Pick a dish and learn it step by step.";
