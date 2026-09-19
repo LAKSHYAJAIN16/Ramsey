@@ -4,13 +4,25 @@ export function showScreen(name) {
 }
 
 export function setCookingMode(mode) {
-  const campaign = mode === "campaign";
-  document.getElementById("campaign-mode").classList.toggle("hidden", !campaign);
-  document.getElementById("freestyle-mode").classList.toggle("hidden", campaign);
-  document.getElementById("mode-campaign").classList.toggle("active", campaign);
-  document.getElementById("mode-freestyle").classList.toggle("active", !campaign);
-  document.getElementById("mode-campaign").setAttribute("aria-selected", String(campaign));
-  document.getElementById("mode-freestyle").setAttribute("aria-selected", String(!campaign));
+  ["campaign", "freestyle", "masterchef"].forEach((name) => {
+    const active = mode === name;
+    document.getElementById(`${name}-mode`).classList.toggle("hidden", !active);
+    document.getElementById(`mode-${name}`).classList.toggle("active", active);
+    document.getElementById(`mode-${name}`).setAttribute("aria-selected", String(active));
+  });
+}
+
+export function renderMasterChefChallenges(challenges, onPick) {
+  const root = document.getElementById("masterchef-challenges");
+  root.innerHTML = "";
+  challenges.forEach((challenge, index) => {
+    const button = document.createElement("button");
+    button.className = "challenge-card";
+    button.type = "button";
+    button.innerHTML = `<span class="challenge-number">${String(index + 1).padStart(2, "0")}</span><span class="challenge-emoji" aria-hidden="true">${challenge.emoji}</span><span class="challenge-main"><strong>${challenge.dish}</strong><small>${challenge.skill}</small></span><span class="challenge-time">${challenge.time}</span>`;
+    button.addEventListener("click", () => onPick(challenge));
+    root.appendChild(button);
+  });
 }
 
 export function renderRecentDishes(dishes, onPick) {

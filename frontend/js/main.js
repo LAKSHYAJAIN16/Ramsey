@@ -1,6 +1,6 @@
 import * as api from "./api.js";
 import * as ui from "./ui.js";
-import { CHEF_PACKS, DAILY_MENUS, getProgress, getQueryParams, getRecentDishes, getSessionId, logHealthyMeal, pushRecentDish, selectChefPack } from "./state.js";
+import { CHEF_PACKS, DAILY_MENUS, MASTERCHEF_CHALLENGES, getProgress, getQueryParams, getRecentDishes, getSessionId, logHealthyMeal, pushRecentDish, selectChefPack } from "./state.js";
 import { VoiceRecorder } from "./voice.js";
 import { XRHost, bindKeyboardFallback } from "./xr.js";
 
@@ -60,6 +60,7 @@ function setupLauncher() {
   ui.renderRecentDishes(getRecentDishes(), (dish) => loadRecipe(dish));
   ui.renderProgress(getProgress());
   ui.renderDailyMenu(DAILY_MENUS, (menu) => loadRecipe(menu.dish, false, menu));
+  ui.renderMasterChefChallenges(MASTERCHEF_CHALLENGES, (challenge) => loadRecipe(challenge.dish));
   const renderPacks = () => ui.renderChefPacks(CHEF_PACKS, getProgress().chefPack, (pack) => {
     selectChefPack(pack.id);
     renderPacks();
@@ -67,6 +68,7 @@ function setupLauncher() {
   renderPacks();
   document.getElementById("mode-campaign").addEventListener("click", () => ui.setCookingMode("campaign"));
   document.getElementById("mode-freestyle").addEventListener("click", () => ui.setCookingMode("freestyle"));
+  document.getElementById("mode-masterchef").addEventListener("click", () => ui.setCookingMode("masterchef"));
 
   document.getElementById("dish-form").addEventListener("submit", (e) => {
     e.preventDefault();

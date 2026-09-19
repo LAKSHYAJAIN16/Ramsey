@@ -26,6 +26,7 @@
       <div class="mode-switch" role="tablist" aria-label="Cooking mode">
         <button id="mode-campaign" class="mode-button active" type="button" role="tab" aria-selected="true" aria-controls="campaign-mode">Campaign</button>
         <button id="mode-freestyle" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="freestyle-mode">Freestyle</button>
+        <button id="mode-masterchef" class="mode-button" type="button" role="tab" aria-selected="false" aria-controls="masterchef-mode">MasterChef</button>
       </div>
 
       <div id="campaign-mode" role="tabpanel">
@@ -77,6 +78,13 @@
 
       <button id="enter-ar" class="hidden">Enter AR on headset</button>
       <button id="enter-vr" class="hidden">Enter VR</button>
+      </section>
+
+      <section id="masterchef-mode" class="masterchef-mode hidden" role="tabpanel" aria-labelledby="mode-masterchef">
+        <p class="eyebrow">THE MASTERCHEF KITCHEN</p>
+        <h2>Take on a signature dish</h2>
+        <p class="mode-description">Choose a restaurant-level challenge. Ramsey finds a live recipe through Browserbase, then coaches you through every technical step.</p>
+        <div id="masterchef-challenges" class="challenge-list" aria-live="polite"></div>
       </section>
     </section>
 

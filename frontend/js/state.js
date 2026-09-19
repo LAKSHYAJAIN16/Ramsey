@@ -10,6 +10,13 @@ export const DAILY_MENUS = [
   { dish: "Herby shakshuka", calories: 390, tag: "protein-rich", detail: "Eggs, tomatoes & fresh herbs", emoji: "🍳" },
 ];
 
+export const MASTERCHEF_CHALLENGES = [
+  { dish: "beef wellington", time: "3 hr challenge", skill: "Sear · duxelles · pastry", emoji: "🥩" },
+  { dish: "lobster ravioli", time: "2 hr challenge", skill: "Fresh pasta · shellfish sauce", emoji: "🦞" },
+  { dish: "chocolate soufflé", time: "90 min challenge", skill: "Meringue · precision bake", emoji: "🍫" },
+  { dish: "risotto alla milanese", time: "75 min challenge", skill: "Stock control · emulsification", emoji: "🍚" },
+];
+
 export const CHEF_PACKS = [
   { id: "ramsey", name: "Ramsey", focus: "Everyday healthy", mark: "R", accent: "tomato" },
   { id: "vikas", name: "Vikas Khanna", focus: "Indian wellness", mark: "VK", accent: "saffron" },
